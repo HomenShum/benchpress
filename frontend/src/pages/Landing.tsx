@@ -324,7 +324,7 @@ export function Landing() {
           </div>
 
           {/* ═══ Section 2: The Solution — Side by side ═══ */}
-          <div id="demo" style={{ marginBottom: "4rem", maxWidth: 820, marginLeft: "auto", marginRight: "auto" }}>
+          <div id="demo" style={{ marginBottom: "4rem", maxWidth: 820, width: "100%", marginLeft: "auto", marginRight: "auto", overflow: "hidden" }}>
             <h2 style={sectionHeading}>The Solution</h2>
 
             <div
@@ -332,6 +332,7 @@ export function Landing() {
                 display: "grid",
                 gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
                 gap: "1rem",
+                width: "100%",
               }}
             >
               {/* Without */}
@@ -343,6 +344,8 @@ export function Landing() {
                   opacity: 0.65,
                   background: "rgba(20,20,21,0.6)",
                   border: "1px solid rgba(255,255,255,0.04)",
+                  minWidth: 0,
+                  overflowWrap: "break-word" as const,
                 }}
               >
                 <h3
@@ -394,6 +397,8 @@ export function Landing() {
                   textAlign: "left",
                   border: "1px solid rgba(217,119,87,0.2)",
                   background: "rgba(217,119,87,0.03)",
+                  minWidth: 0,
+                  overflowWrap: "break-word" as const,
                 }}
               >
                 <h3
