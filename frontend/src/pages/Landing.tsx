@@ -112,11 +112,11 @@ export function Landing() {
           flexDirection: "column",
           alignItems: "center",
           padding: "4rem 1.5rem 2rem",
-          overflowX: "hidden",
-          maxWidth: "100vw",
+          width: "100%",
+          boxSizing: "border-box",
         }}
       >
-        <div style={{ textAlign: "center", maxWidth: 820, width: "100%" }}>
+        <div style={{ textAlign: "center", width: "100%", maxWidth: 820 }}>
 
           {/* ═══ Hero ═══ */}
           <h1
