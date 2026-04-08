@@ -30,11 +30,27 @@ impl NbqaClient {
         self
     }
 
+    /// Build a request with auth header if token is set
+    fn authed_get(&self, url: String) -> reqwest::RequestBuilder {
+        let mut req = self.client.get(url);
+        if let Some(ref token) = self.auth_token {
+            req = req.header("Authorization", format!("Bearer {}", token));
+        }
+        req
+    }
+
+    fn authed_post(&self, url: String) -> reqwest::RequestBuilder {
+        let mut req = self.client.post(url);
+        if let Some(ref token) = self.auth_token {
+            req = req.header("Authorization", format!("Bearer {}", token));
+        }
+        req
+    }
+
     /// Run a QA check on a URL
     pub async fn qa_check(&self, url: &str) -> Result<QaResult> {
         let resp = self
-            .client
-            .post(format!("{}/api/qa/check", self.base_url))
+            .authed_post(format!("{}/api/qa/check", self.base_url))
             .json(&serde_json::json!({ "url": url }))
             .send()
             .await?;
@@ -48,8 +64,7 @@ impl NbqaClient {
     /// Generate a sitemap for a URL
     pub async fn sitemap(&self, url: &str, max_depth: u8, max_pages: usize) -> Result<SitemapResult> {
         let resp = self
-            .client
-            .post(format!("{}/api/qa/sitemap", self.base_url))
+            .authed_post(format!("{}/api/qa/sitemap", self.base_url))
             .json(&serde_json::json!({
                 "url": url,
                 "max_depth": max_depth,
@@ -67,8 +82,7 @@ impl NbqaClient {
     /// Run a UX audit on a URL
     pub async fn ux_audit(&self, url: &str) -> Result<UxAuditResult> {
         let resp = self
-            .client
-            .post(format!("{}/api/qa/ux-audit", self.base_url))
+            .authed_post(format!("{}/api/qa/ux-audit", self.base_url))
             .json(&serde_json::json!({ "url": url }))
             .send()
             .await?;
@@ -82,8 +96,7 @@ impl NbqaClient {
     /// Check server health
     pub async fn health(&self) -> Result<HealthResponse> {
         let resp = self
-            .client
-            .get(format!("{}/health", self.base_url))
+            .authed_get(format!("{}/health", self.base_url))
             .send()
             .await?;
 

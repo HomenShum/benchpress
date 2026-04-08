@@ -110,11 +110,8 @@ enum Commands {
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    // Init telemetry
-    if cli.verbose {
-        unsafe { std::env::set_var("RUST_LOG", "debug") };
-    }
-    nodebench_qa_telemetry::init();
+    // Init telemetry — verbose flag controls filter level without unsafe set_var
+    nodebench_qa_telemetry::init_with_level(if cli.verbose { "debug" } else { "info" });
 
     match cli.command {
         Commands::Serve { host, mcp, mcp_port } => {
@@ -140,8 +137,21 @@ async fn main() -> Result<()> {
             };
 
             let app = nodebench_qa_api::build_router(&config);
+
+            // Mount MCP server on separate port if enabled
+            if mcp {
+                let mcp_router = nodebench_qa_mcp::build_mcp_router();
+                let mcp_listener = tokio::net::TcpListener::bind(format!("{}:{}", host, mcp_port)).await?;
+                tracing::info!("MCP server listening on {}:{}", host, mcp_port);
+                tokio::spawn(async move {
+                    if let Err(e) = axum::serve(mcp_listener, mcp_router).await {
+                        tracing::error!("MCP server error: {}", e);
+                    }
+                });
+            }
+
             let listener = tokio::net::TcpListener::bind(format!("{}:{}", host, cli.port)).await?;
-            tracing::info!("nodebench-qa server listening on {}:{}", host, cli.port);
+            tracing::info!("nodebench-qa API server listening on {}:{}", host, cli.port);
             axum::serve(listener, app).await?;
         }
 

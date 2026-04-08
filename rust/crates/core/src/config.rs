@@ -113,7 +113,5 @@ impl AppConfig {
 }
 
 fn toml_from_str(s: &str) -> crate::Result<AppConfig> {
-    // Minimal TOML parsing via serde_json round-trip for now
-    // TODO: Add proper TOML dependency when config file format stabilizes
-    serde_json::from_str(s).map_err(|e| crate::Error::Config(e.to_string()))
+    toml::from_str(s).map_err(|e| crate::Error::Config(e.to_string()))
 }

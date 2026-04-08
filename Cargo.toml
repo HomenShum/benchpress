@@ -43,6 +43,7 @@ chromiumoxide = { version = "0.7", features = ["tokio-runtime"] }
 clap = { version = "4.5", features = ["derive", "env"] }
 # Config
 config = "0.14"
+toml = "0.8"
 directories = "6.0"
 # UUID
 uuid = { version = "1.0", features = ["v4", "serde"] }

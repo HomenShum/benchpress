@@ -1,4 +1,4 @@
-use axum::{extract::State, routing::post, Json, Router};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::post, Json, Router};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use uuid::Uuid;
@@ -80,90 +80,105 @@ pub struct DiffCrawlResponse {
     pub duration_ms: u64,
 }
 
+#[derive(Serialize)]
+struct ApiError {
+    error: String,
+    status: u16,
+}
+
 // ── Handlers ────────────────────────────────────────────────────────────────
 
 async fn qa_check(
     State(state): State<Arc<AppState>>,
     Json(req): Json<QaCheckRequest>,
-) -> Json<QaCheckResponse> {
+) -> Result<Json<QaCheckResponse>, impl IntoResponse> {
     state.increment_requests();
     let start = std::time::Instant::now();
 
-    // TODO: Wire to qa-engine crate for real browser automation
     let result = nodebench_qa_engine::qa::run_qa_check(&req.url, req.timeout_ms).await;
 
-    let (score, issues_count) = match result {
-        Ok(r) => (r.score.overall, r.issues.len()),
-        Err(_) => (0, 0),
-    };
-
-    Json(QaCheckResponse {
-        id: Uuid::new_v4().to_string(),
-        url: req.url,
-        score,
-        issues_count,
-        duration_ms: start.elapsed().as_millis() as u64,
-        status: "completed",
-    })
+    match result {
+        Ok(r) => Ok(Json(QaCheckResponse {
+            id: Uuid::new_v4().to_string(),
+            url: req.url,
+            score: r.score.overall,
+            issues_count: r.issues.len(),
+            duration_ms: start.elapsed().as_millis() as u64,
+            status: "completed",
+        })),
+        Err(e) => Err((
+            StatusCode::BAD_GATEWAY,
+            Json(ApiError { error: e.to_string(), status: 502 }),
+        )),
+    }
 }
 
 async fn sitemap(
     State(state): State<Arc<AppState>>,
     Json(req): Json<SitemapRequest>,
-) -> Json<SitemapResponse> {
+) -> Result<Json<SitemapResponse>, impl IntoResponse> {
     state.increment_requests();
     let start = std::time::Instant::now();
 
     let result = nodebench_qa_engine::crawl::crawl_sitemap(&req.url, req.max_depth, req.max_pages).await;
 
-    let total_pages = match result {
-        Ok(r) => r.total_pages,
-        Err(_) => 0,
-    };
-
-    Json(SitemapResponse {
-        root_url: req.url,
-        total_pages,
-        duration_ms: start.elapsed().as_millis() as u64,
-    })
+    match result {
+        Ok(r) => Ok(Json(SitemapResponse {
+            root_url: req.url,
+            total_pages: r.total_pages,
+            duration_ms: start.elapsed().as_millis() as u64,
+        })),
+        Err(e) => Err((
+            StatusCode::BAD_GATEWAY,
+            Json(ApiError { error: e.to_string(), status: 502 }),
+        )),
+    }
 }
 
 async fn ux_audit(
     State(state): State<Arc<AppState>>,
     Json(req): Json<UxAuditRequest>,
-) -> Json<UxAuditResponse> {
+) -> Result<Json<UxAuditResponse>, impl IntoResponse> {
     state.increment_requests();
     let start = std::time::Instant::now();
 
     let result = nodebench_qa_engine::audit::run_ux_audit(&req.url).await;
 
-    let (score, rules_checked, rules_passed) = match result {
-        Ok(r) => (r.score, r.rules_checked, r.rules_passed),
-        Err(_) => (0, 0, 0),
-    };
-
-    Json(UxAuditResponse {
-        url: req.url,
-        score,
-        rules_checked,
-        rules_passed,
-        duration_ms: start.elapsed().as_millis() as u64,
-    })
+    match result {
+        Ok(r) => Ok(Json(UxAuditResponse {
+            url: req.url,
+            score: r.score,
+            rules_checked: r.rules_checked,
+            rules_passed: r.rules_passed,
+            duration_ms: start.elapsed().as_millis() as u64,
+        })),
+        Err(e) => Err((
+            StatusCode::BAD_GATEWAY,
+            Json(ApiError { error: e.to_string(), status: 502 }),
+        )),
+    }
 }
 
 async fn diff_crawl(
     State(state): State<Arc<AppState>>,
     Json(req): Json<DiffCrawlRequest>,
-) -> Json<DiffCrawlResponse> {
+) -> Result<Json<DiffCrawlResponse>, impl IntoResponse> {
     state.increment_requests();
     let start = std::time::Instant::now();
 
-    // TODO: Wire to diff_crawl engine
-    Json(DiffCrawlResponse {
-        url: req.url,
-        changes_detected: 0,
-        duration_ms: start.elapsed().as_millis() as u64,
-    })
+    let result = nodebench_qa_engine::diff::run_diff_crawl(&req.url, req.baseline_id.as_deref()).await;
+
+    match result {
+        Ok(r) => Ok(Json(DiffCrawlResponse {
+            url: req.url,
+            changes_detected: r.diffs.len(),
+            duration_ms: start.elapsed().as_millis() as u64,
+        })),
+        Err(e) => Err((
+            StatusCode::BAD_GATEWAY,
+            Json(ApiError { error: e.to_string(), status: 502 }),
+        )),
+    }
 }
 
 // ── Router ──────────────────────────────────────────────────────────────────
