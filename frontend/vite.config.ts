@@ -10,6 +10,10 @@ export default defineConfig({
         target: "http://localhost:8100",
         changeOrigin: true,
       },
+      "/health": {
+        target: "http://localhost:8100",
+        changeOrigin: true,
+      },
       "/mcp": {
         target: "http://localhost:8101",
         changeOrigin: true,

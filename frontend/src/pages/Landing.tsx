@@ -1,153 +1,278 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Layout } from "../components/Layout";
+import { qaCheck } from "../lib/api";
+import { saveFromResult } from "../lib/storage";
+
+const FEATURE_CARDS: { title: string; desc: string; accent?: boolean }[] = [
+  {
+    title: "QA Check",
+    desc: "JS errors, accessibility, rendering, performance, SEO, security -- in one call.",
+    accent: true,
+  },
+  {
+    title: "Trajectory Replay",
+    desc: "Run once, replay forever. 60-70% token savings on reruns via screen fingerprints.",
+  },
+  {
+    title: "MCP Native",
+    desc: "Works inside Claude Code, Cursor, Windsurf. Install via npx or cargo.",
+  },
+];
 
 export function Landing() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleCheck = async () => {
-    if (!url) return;
+    if (!url.trim()) return;
     setLoading(true);
+    setError(null);
     try {
-      const resp = await fetch("/api/qa/check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      const data = await resp.json();
-      navigate(`/results/${data.id}`);
-    } catch {
+      const result = await qaCheck(url.trim());
+      saveFromResult(result);
+      navigate(`/results/${result.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Request failed");
       setLoading(false);
     }
   };
 
+  const handleQuickAction = (path: string) => {
+    if (!url.trim()) return;
+    // Encode the URL so it can be passed as a query param
+    navigate(`${path}?url=${encodeURIComponent(url.trim())}`);
+  };
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
-      }}
-    >
-      <div style={{ textAlign: "center", maxWidth: 640 }}>
-        <h1
-          style={{
-            fontSize: "3rem",
-            fontWeight: 700,
-            letterSpacing: "-0.02em",
-            marginBottom: "1rem",
-          }}
-        >
-          nodebench-
-          <span style={{ color: "var(--accent)" }}>qa</span>
-        </h1>
-
-        <p
-          style={{
-            fontSize: "1.25rem",
-            color: "var(--text-secondary)",
-            marginBottom: "2.5rem",
-            lineHeight: 1.6,
-          }}
-        >
-          AI agents forget. nodebench-qa remembers.
-          <br />
-          QA your app in 60 seconds. 60-70% fewer tokens on reruns.
-        </p>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "0.75rem",
-            maxWidth: 500,
-            margin: "0 auto 2rem",
-          }}
-        >
-          <input
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://your-app.com"
-            onKeyDown={(e) => e.key === "Enter" && handleCheck()}
+    <Layout>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "4rem 1.5rem 2rem",
+          minHeight: "calc(100vh - 56px - 60px)",
+        }}
+      >
+        <div style={{ textAlign: "center", maxWidth: 680, width: "100%" }}>
+          {/* Hero */}
+          <h1
             style={{
-              flex: 1,
-              padding: "0.875rem 1.25rem",
+              fontSize: "3.25rem",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.1,
+              marginBottom: "1rem",
+            }}
+          >
+            nodebench-
+            <span style={{ color: "var(--accent)" }}>qa</span>
+          </h1>
+
+          <p
+            style={{
+              fontSize: "1.25rem",
+              color: "var(--text-secondary)",
+              lineHeight: 1.6,
+              marginBottom: "2.5rem",
+            }}
+          >
+            AI agents forget. nodebench-qa remembers.
+            <br />
+            QA your app in 60 seconds. 60-70% fewer tokens on reruns.
+          </p>
+
+          {/* URL input + QA Check button */}
+          <div
+            style={{
+              display: "flex",
+              gap: "0.75rem",
+              maxWidth: 540,
+              margin: "0 auto 1rem",
+            }}
+          >
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://your-app.com"
+              onKeyDown={(e) => e.key === "Enter" && handleCheck()}
+              style={{
+                flex: 1,
+                padding: "0.875rem 1.25rem",
+                borderRadius: "0.75rem",
+                border: "1px solid var(--border)",
+                background: "var(--bg-surface)",
+                color: "var(--text-primary)",
+                fontSize: "1rem",
+                outline: "none",
+              }}
+            />
+            <button
+              onClick={handleCheck}
+              disabled={loading || !url.trim()}
+              style={{
+                padding: "0.875rem 2rem",
+                borderRadius: "0.75rem",
+                border: "none",
+                background: "var(--accent)",
+                color: "#fff",
+                fontSize: "1rem",
+                fontWeight: 600,
+                cursor: loading ? "wait" : "pointer",
+                opacity: loading || !url.trim() ? 0.5 : 1,
+                transition: "opacity 0.15s",
+              }}
+            >
+              {loading ? "Scanning..." : "QA Check"}
+            </button>
+          </div>
+
+          {/* Quick-action buttons */}
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              marginBottom: "1.5rem",
+            }}
+          >
+            {[
+              { label: "Sitemap", path: "/sitemap" },
+              { label: "UX Audit", path: "/audit" },
+              { label: "Dashboard", path: "/dashboard" },
+            ].map(({ label, path }) => (
+              <button
+                key={path}
+                onClick={() => handleQuickAction(path)}
+                disabled={!url.trim()}
+                style={{
+                  padding: "0.5rem 1rem",
+                  borderRadius: "0.5rem",
+                  border: "1px solid var(--border)",
+                  background: "transparent",
+                  color: url.trim() ? "var(--text-secondary)" : "var(--text-muted)",
+                  fontSize: "0.8125rem",
+                  fontWeight: 500,
+                  cursor: url.trim() ? "pointer" : "default",
+                  opacity: url.trim() ? 1 : 0.5,
+                  transition: "border-color 0.15s, color 0.15s",
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Error message */}
+          {error && (
+            <div
+              style={{
+                padding: "0.75rem 1rem",
+                borderRadius: "0.5rem",
+                background: "rgba(239,68,68,0.1)",
+                border: "1px solid rgba(239,68,68,0.2)",
+                color: "#ef4444",
+                fontSize: "0.875rem",
+                marginBottom: "1.5rem",
+                maxWidth: 540,
+                margin: "0 auto 1.5rem",
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          {/* Feature cards */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "1rem",
+              marginTop: "2rem",
+              maxWidth: 640,
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}
+          >
+            {FEATURE_CARDS.map((card) => (
+              <div
+                key={card.title}
+                style={{
+                  padding: "1.25rem",
+                  borderRadius: "0.75rem",
+                  border: card.accent
+                    ? "1px solid rgba(217,119,87,0.25)"
+                    : "1px solid var(--border)",
+                  background: "var(--bg-surface)",
+                  textAlign: "left",
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: "0.9375rem",
+                    fontWeight: 600,
+                    marginBottom: "0.5rem",
+                    color: card.accent ? "var(--accent)" : "var(--text-primary)",
+                  }}
+                >
+                  {card.title}
+                </h3>
+                <p
+                  style={{
+                    fontSize: "0.8125rem",
+                    color: "var(--text-secondary)",
+                    lineHeight: 1.5,
+                    margin: 0,
+                  }}
+                >
+                  {card.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Install snippet */}
+          <div
+            style={{
+              marginTop: "2.5rem",
+              padding: "1.25rem 1.5rem",
               borderRadius: "0.75rem",
               border: "1px solid var(--border)",
               background: "var(--bg-surface)",
-              color: "var(--text-primary)",
-              fontSize: "1rem",
-              outline: "none",
-            }}
-          />
-          <button
-            onClick={handleCheck}
-            disabled={loading || !url}
-            style={{
-              padding: "0.875rem 2rem",
-              borderRadius: "0.75rem",
-              border: "none",
-              background: "var(--accent)",
-              color: "white",
-              fontSize: "1rem",
-              fontWeight: 600,
-              cursor: loading ? "wait" : "pointer",
-              opacity: loading || !url ? 0.6 : 1,
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: "0.8125rem",
+              color: "var(--text-secondary)",
+              textAlign: "left",
+              maxWidth: 540,
+              marginLeft: "auto",
+              marginRight: "auto",
             }}
           >
-            {loading ? "Scanning..." : "QA Check"}
-          </button>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "2rem",
-            justifyContent: "center",
-            color: "var(--text-muted)",
-            fontSize: "0.875rem",
-          }}
-        >
-          <span>JS Errors</span>
-          <span>Accessibility</span>
-          <span>UX Audit</span>
-          <span>Diff Crawl</span>
-          <span>Workflow Replay</span>
-        </div>
-
-        <div
-          style={{
-            marginTop: "4rem",
-            padding: "1.5rem",
-            borderRadius: "1rem",
-            border: "1px solid var(--border)",
-            background: "var(--bg-surface)",
-            fontFamily: "monospace",
-            fontSize: "0.875rem",
-            color: "var(--text-secondary)",
-            textAlign: "left",
-          }}
-        >
-          <div style={{ color: "var(--text-muted)", marginBottom: "0.5rem" }}>
-            # Install
-          </div>
-          <div>
-            <span style={{ color: "var(--accent)" }}>$</span> cargo install
-            nodebench-qa-cli
-          </div>
-          <div style={{ marginTop: "0.75rem", color: "var(--text-muted)" }}>
-            # Or use from Claude Code / Cursor / Windsurf
-          </div>
-          <div>
-            <span style={{ color: "var(--accent)" }}>$</span> nbqa check
-            http://localhost:3000
+            <div style={{ color: "var(--text-muted)", marginBottom: "0.375rem" }}>
+              # Install
+            </div>
+            <div>
+              <span style={{ color: "var(--accent)" }}>$</span> cargo install
+              nodebench-qa-cli
+            </div>
+            <div
+              style={{ marginTop: "0.625rem", color: "var(--text-muted)" }}
+            >
+              # Or use from Claude Code / Cursor / Windsurf
+            </div>
+            <div>
+              <span style={{ color: "var(--accent)" }}>$</span> nbqa check
+              http://localhost:3000
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }

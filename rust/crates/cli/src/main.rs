@@ -19,10 +19,6 @@ struct Cli {
     #[command(subcommand)]
     command: Commands,
 
-    /// Server port (default: 8100)
-    #[arg(long, default_value_t = 8100)]
-    port: u16,
-
     /// Enable JSON output
     #[arg(long)]
     json: bool,
@@ -39,6 +35,10 @@ enum Commands {
         /// Host to bind to
         #[arg(long, default_value = "0.0.0.0")]
         host: String,
+
+        /// API server port
+        #[arg(long, default_value_t = 8100)]
+        port: u16,
 
         /// Also start the MCP server
         #[arg(long, default_value_t = true)]
@@ -114,9 +114,9 @@ async fn main() -> Result<()> {
     nodebench_qa_telemetry::init_with_level(if cli.verbose { "debug" } else { "info" });
 
     match cli.command {
-        Commands::Serve { host, mcp, mcp_port } => {
+        Commands::Serve { host, port, mcp, mcp_port } => {
             println!("{}", BANNER);
-            println!("  API server: http://{}:{}", host, cli.port);
+            println!("  API server: http://{}:{}", host, port);
             if mcp {
                 println!("  MCP server: http://{}:{}/mcp", host, mcp_port);
             }
@@ -125,7 +125,7 @@ async fn main() -> Result<()> {
             let config = nodebench_qa_core::AppConfig {
                 server: nodebench_qa_core::config::ServerConfig {
                     host: host.clone(),
-                    port: cli.port,
+                    port,
                     ..Default::default()
                 },
                 mcp: nodebench_qa_core::config::McpConfig {
@@ -150,8 +150,8 @@ async fn main() -> Result<()> {
                 });
             }
 
-            let listener = tokio::net::TcpListener::bind(format!("{}:{}", host, cli.port)).await?;
-            tracing::info!("nodebench-qa API server listening on {}:{}", host, cli.port);
+            let listener = tokio::net::TcpListener::bind(format!("{}:{}", host, port)).await?;
+            tracing::info!("nodebench-qa API server listening on {}:{}", host, port);
             axum::serve(listener, app).await?;
         }
 
