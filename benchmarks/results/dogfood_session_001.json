@@ -1,0 +1,53 @@
+{
+  "session_id": "aa625586-5d06-4027-b6b5-35e8d9c369b7",
+  "description": "Build attrition.sh from scratch — fork retention.sh, rewrite in Rust, pivot to enforcement-as-wedge",
+  "model": "claude-opus-4-6",
+  "total_tokens": 267563047,
+  "input_tokens": 267395264,
+  "output_tokens": 167783,
+  "duration_minutes": 1800,
+  "tool_calls": 536,
+  "corrections": 1,
+  "estimated_cost_usd": 4023.51,
+  "tools_breakdown": {
+    "mcp__Claude_in_Chrome__computer": 139,
+    "Bash": 92,
+    "Write": 64,
+    "Read": 31,
+    "Edit": 31,
+    "TodoWrite": 30,
+    "mcp__Claude_in_Chrome__navigate": 28,
+    "Agent": 21,
+    "mcp__Claude_in_Chrome__javascript_tool": 17,
+    "TaskOutput": 9,
+    "mcp__plugin_context-mode_context-mode__execute": 9,
+    "mcp__Claude_in_Chrome__find": 9,
+    "AskUserQuestion": 5,
+    "Grep": 5
+  },
+  "deliverables": {
+    "rust_crates": 12,
+    "rust_tests": 87,
+    "frontend_pages": 10,
+    "mcp_tools": 12,
+    "cli_subcommands": 11,
+    "python_sdk_wrappers": 7,
+    "task_definitions": 10,
+    "total_files_created": 120,
+    "total_lines_rust": 8000,
+    "total_lines_typescript": 6000,
+    "total_lines_python": 1500
+  },
+  "workflow_steps_completed": {
+    "search": true,
+    "read": true,
+    "edit": true,
+    "test": true,
+    "build": true,
+    "preview": true,
+    "commit": true,
+    "deploy": true
+  },
+  "completion_score": 1.0,
+  "notes": "Full product built in one session: Rust workspace, React frontend, Python SDK, benchmark harness, install script, judge hooks, production deploy to attrition.sh"
+}
