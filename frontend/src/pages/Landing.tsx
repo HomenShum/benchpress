@@ -350,10 +350,67 @@ export function Landing() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════
-            [3/8] HOW IT WORKS — 3 steps
+            [3/9] THIS IS NOT A HYPOTHETICAL — real quotes from the wild
             ═══════════════════════════════════════════════════════ */}
         <section style={sectionGap}>
-          <div style={sectionNum}>[3/8]</div>
+          <div style={sectionNum}>[3/9]</div>
+          <h2 style={sectionHeading}>This is not a hypothetical</h2>
+          <p style={{ ...muted, marginBottom: "1.25rem", textAlign: "center" }}>
+            Real developers. Real GitHub issues. Real frustration. All from 2026.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {[
+              {
+                quote: "Claude Code will often stop after a task, forgetting it has unfinished TODOs, and you have to remind it to keep going.",
+                source: "GitHub issue #1632",
+                url: "https://github.com/anthropics/claude-code/issues/1632",
+                detail: "User had 10 TODOs. Agent completed 3 and declared victory.",
+              },
+              {
+                quote: "Claude selectively completed only the easy parts and skipped the rest without asking.",
+                source: "GitHub issue #24129",
+                url: "https://github.com/anthropics/claude-code/issues/24129",
+                detail: "5 explicit requirements given. Claude did 2, silently dropped 3.",
+              },
+              {
+                quote: "A developer tracking token consumption across 42 agent runs found that 70% of tokens were waste.",
+                source: "Morph LLM cost analysis",
+                url: "https://www.morphllm.com/ai-coding-costs",
+                detail: "Agent read too many files, explored irrelevant paths, repeated searches.",
+              },
+              {
+                quote: "Developers using Claude Code as an agent report $500–2,000/month in API costs, far exceeding published pricing.",
+                source: "Morph LLM pricing report",
+                url: "https://www.morphllm.com/ai-coding-costs",
+                detail: "Sessions reach 200K tokens per call by the end.",
+              },
+            ].map((item) => (
+              <div key={item.source} style={{ ...glass, padding: "1rem 1.25rem", display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+                <span style={{ color: "#d97757", fontSize: "1.25rem", lineHeight: 1, flexShrink: 0, marginTop: "0.125rem" }}>&ldquo;</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: "0.875rem", color: "#e8e6e3", lineHeight: 1.5, marginBottom: "0.375rem" }}>
+                    {item.quote}
+                  </p>
+                  <p style={{ fontSize: "0.75rem", color: "#9a9590", marginBottom: "0.25rem" }}>{item.detail}</p>
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.6875rem", color: "#d97757", textDecoration: "none" }}>
+                    {item.source} &rarr;
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ textAlign: "center", fontSize: "0.75rem", color: "#9a9590", marginTop: "1rem" }}>
+            Attrition exists because CLAUDE.md remembers preferences &mdash; but nothing <em>enforces</em> workflow steps.
+          </p>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════
+            [4/9] HOW IT WORKS — 3 steps
+            ═══════════════════════════════════════════════════════ */}
+        <section style={sectionGap}>
+          <div style={sectionNum}>[4/9]</div>
           <h2 style={sectionHeading}>How it works</h2>
 
           <div style={{
@@ -413,10 +470,10 @@ export function Landing() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════
-            [4/8] COMPETITIVE POSITIONING — feature matrix
+            [5/9] COMPETITIVE POSITIONING — feature matrix
             ═══════════════════════════════════════════════════════ */}
         <section style={sectionGap}>
-          <div style={sectionNum}>[4/8]</div>
+          <div style={sectionNum}>[5/9]</div>
           <h2 style={sectionHeading}>Memory remembers. Attrition enforces.</h2>
           <p style={{ ...muted, marginBottom: "1.5rem" }}>
             Most tools help your agent remember. Attrition is the only one that blocks incomplete work.
@@ -493,10 +550,10 @@ export function Landing() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════
-            [5/8] REAL BENCHMARK — numbers with context
+            [6/9] REAL BENCHMARK — numbers with context
             ═══════════════════════════════════════════════════════ */}
         <section style={sectionGap}>
-          <div style={sectionNum}>[5/8]</div>
+          <div style={sectionNum}>[6/9]</div>
           <h2 style={sectionHeading}>Real data. Not simulated.</h2>
 
           <div style={{
@@ -543,10 +600,10 @@ export function Landing() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════
-            [6/8] WHO IT'S FOR — 3 persona cards
+            [7/9] WHO IT'S FOR — 3 persona cards
             ═══════════════════════════════════════════════════════ */}
         <section style={sectionGap}>
-          <div style={sectionNum}>[6/8]</div>
+          <div style={sectionNum}>[7/9]</div>
           <h2 style={sectionHeading}>Who it's for</h2>
 
           <div style={{
@@ -582,10 +639,10 @@ export function Landing() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════
-            [7/8] UNDER THE HOOD — technical depth
+            [8/9] UNDER THE HOOD — technical depth
             ═══════════════════════════════════════════════════════ */}
         <section style={sectionGap}>
-          <div style={sectionNum}>[7/8]</div>
+          <div style={sectionNum}>[8/9]</div>
           <h2 style={sectionHeading}>Built for engineers who read source code.</h2>
 
           <div style={{
@@ -668,10 +725,10 @@ track()  # auto-detects OpenAI, Anthropic, LangChain, CrewAI`}
         </section>
 
         {/* ═══════════════════════════════════════════════════════
-            [8/8] TRY IT — install LAST (after belief)
+            [9/9] TRY IT — install LAST (after belief)
             ═══════════════════════════════════════════════════════ */}
         <section style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <div style={sectionNum}>[8/8]</div>
+          <div style={sectionNum}>[9/9]</div>
           <h2 style={{ ...sectionHeading, marginBottom: "1.25rem" }}>Try it</h2>
 
           <div style={{
