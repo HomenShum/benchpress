@@ -359,6 +359,23 @@ export function Landing() {
               </div>
             ))}
           </div>
+
+          <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
+            <a
+              href="/improvements"
+              onClick={(e) => { e.preventDefault(); navigate("/improvements"); }}
+              style={{
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                color: "#d97757",
+                textDecoration: "none",
+                borderBottom: "1px solid rgba(217,119,87,0.3)",
+                paddingBottom: "0.125rem",
+              }}
+            >
+              See captured runs &rarr;
+            </a>
+          </div>
         </section>
 
 
