@@ -291,3 +291,15 @@ Not: multi-surface dashboards with competitive comparison tables and 350-tool re
 - [Linear Quality Wednesdays](https://linear.app/blog)
 - [Linear Zero-bugs policy](https://linear.app/blog)
 - Full audit: `docs/BEHAVIORAL_DESIGN_AUDIT.md`
+
+### Three-Product Stack (Apr 2026)
+
+```
+NodeBench AI   = flagship user surface
+nodebench-mcp  = embedded workflow lane
+Attrition.sh   = measured replay + optimization lane
+```
+
+Attrition is NOT a third flagship. It is the measurable optimization lane for the same NodeBench workflow. One job: capture, measure, compress, replay, prove savings.
+
+Full spec: `docs/THREE_PRODUCT_STACK_SPEC.md`
