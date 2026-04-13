@@ -84,8 +84,8 @@ export function Proof() {
               <div style={{ fontSize: "0.8125rem", color: "#e8e6e3", lineHeight: 1.5 }}>
                 <div style={{ marginBottom: "0.25rem" }}>8/8 steps verified</div>
                 <div style={{ marginBottom: "0.25rem" }}>0 user corrections needed</div>
-                <div style={{ marginBottom: "0.25rem" }}>Replay: 56% fewer tokens</div>
-                <div style={{ ...mono, fontSize: "0.75rem", color: "#22c55e", marginTop: "0.5rem" }}>$0.82 → $0.18 next run</div>
+                <div style={{ marginBottom: "0.25rem" }}>Replay: token reduction measured per-run</div>
+                <div style={{ ...mono, fontSize: "0.75rem", color: "#22c55e", marginTop: "0.5rem" }}>Cost: measured from real API token counts</div>
               </div>
             </div>
           </div>
@@ -169,7 +169,7 @@ export function Proof() {
               baseline: "Agent read 15 files (12 irrelevant), searched same query 3x, explored 2 dead-end approaches. 52K tokens.",
               caught: "Distiller: eliminated dead-ends, deduplicated searches, extracted copy-paste blocks. 28 → 12 essential steps.",
               after: "Distilled replay: 23K tokens on Sonnet. Judge verified 6/8 steps on replay (2 missing: preview, qa).",
-              outcome: "$0.82 → $0.18 per run. 56% token reduction. Replay accepted as PARTIAL.",
+              outcome: "52K → 23K tokens per run. Cost measured from real API usage. Replay accepted as PARTIAL.",
               verdictBadge: "PARTIAL (6/8)", verdictColor: "#eab308",
               trace: "cost_overrun",
             },

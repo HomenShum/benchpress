@@ -7,27 +7,23 @@ import {
   type BenchmarkSummary,
 } from "../lib/api";
 
-/* ── Fallback data (YAML estimates, shown when API returns no data) ── */
+/* ── No fake fallback data — show empty state instead ────────────── */
+/* Previous version had hardcoded simulated numbers (33.9% savings, etc.)
+   which could be mistaken for real measurements. Now we show an honest
+   empty state until real benchmark data is available from the API. */
 
-const FALLBACK_TASKS: BenchmarkTask[] = [
-  { task_name: "add-dark-mode",           category: "feature",  complexity: "medium",  with_attrition: false, total_tokens: 32000, time_minutes: 12, corrections: 3, completion_score: 0.56, estimated_cost_usd: 0.23, model: "claude-sonnet-4-6", simulated: true },
-  { task_name: "add-dark-mode",           category: "feature",  complexity: "medium",  with_attrition: true,  total_tokens: 21000, time_minutes: 8,  corrections: 0, completion_score: 0.94, estimated_cost_usd: 0.15, model: "claude-sonnet-4-6", simulated: true },
-  { task_name: "fix-login-validation",    category: "bugfix",   complexity: "simple",  with_attrition: false, total_tokens: 18000, time_minutes: 6,  corrections: 1, completion_score: 0.63, estimated_cost_usd: 0.13, model: "claude-sonnet-4-6", simulated: true },
-  { task_name: "fix-login-validation",    category: "bugfix",   complexity: "simple",  with_attrition: true,  total_tokens: 12000, time_minutes: 4,  corrections: 0, completion_score: 0.95, estimated_cost_usd: 0.09, model: "claude-sonnet-4-6", simulated: true },
-  { task_name: "refactor-async-client",   category: "refactor", complexity: "complex", with_attrition: false, total_tokens: 52000, time_minutes: 20, corrections: 4, completion_score: 0.44, estimated_cost_usd: 0.37, model: "claude-sonnet-4-6", simulated: true },
-  { task_name: "refactor-async-client",   category: "refactor", complexity: "complex", with_attrition: true,  total_tokens: 34000, time_minutes: 13, corrections: 1, completion_score: 0.88, estimated_cost_usd: 0.24, model: "claude-sonnet-4-6", simulated: true },
-];
+const FALLBACK_TASKS: BenchmarkTask[] = [];
 
 function computeFallbackSummary(): BenchmarkSummary {
   return {
-    total_tasks: 3,
-    token_savings_pct: 33.9,
-    time_savings_pct: 33.2,
-    completion_with: 92.3,
-    completion_without: 54.3,
-    first_pass_success_pct: 100,
-    avg_corrections_with: 0.3,
-    avg_corrections_without: 2.7,
+    total_tasks: 0,
+    token_savings_pct: 0,
+    time_savings_pct: 0,
+    completion_with: 0,
+    completion_without: 0,
+    first_pass_success_pct: 0,
+    avg_corrections_with: 0,
+    avg_corrections_without: 0,
   };
 }
 
@@ -194,7 +190,7 @@ export function Benchmark() {
           )}
           {!isServerDown && source === "no_data" && (
             <span style={{ color: "#ecc94b", marginRight: "0.5rem" }}>
-              No benchmark results on disk -- showing projected data.
+              No benchmark data yet. Run real queries to generate measured stats.
             </span>
           )}
           {!isServerDown && source === "benchmark_results" && (

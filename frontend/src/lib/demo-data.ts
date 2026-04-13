@@ -304,7 +304,8 @@ function demoComparison(): ModelComparison {
     modelA: {
       name: "opus-4-6",
       tokens: opusTokens,
-      cost: Math.round(opusTokens * 0.015) / 100,
+      // Real Anthropic pricing: $15/M input, $75/M output (blended ~$15/M for demo)
+      cost: Math.round(opusTokens * (15.0 / 1_000_000) * 100) / 100,
       durationMs: wf.events.reduce((s, e) => s + e.durationMs, 0),
       judgeScore: 98,
       events: wf.events,
@@ -312,7 +313,8 @@ function demoComparison(): ModelComparison {
     modelB: {
       name: "sonnet-4-6",
       tokens: sonnetTokens,
-      cost: Math.round(sonnetTokens * 0.003) / 100,
+      // Real Anthropic pricing: $3/M input, $15/M output (blended ~$3/M for demo)
+      cost: Math.round(sonnetTokens * (3.0 / 1_000_000) * 100) / 100,
       durationMs: sonnetEvents.reduce((s, e) => s + e.durationMs, 0),
       judgeScore: 91,
       events: sonnetEvents,
