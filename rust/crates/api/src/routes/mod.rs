@@ -1,3 +1,4 @@
+pub mod advisor;
 pub mod benchmark_api;
 pub mod health;
 pub mod judge;
@@ -27,6 +28,7 @@ pub fn api_routes() -> Router<Arc<AppState>> {
         .nest("/benchmark", benchmark_api::routes())
         .nest("/live", live::routes())
         .nest("/retention", retention::routes())
+        .nest("/advisor", advisor::routes())
 }
 
 pub fn health_routes() -> Router<Arc<AppState>> {

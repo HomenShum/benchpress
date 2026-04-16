@@ -19,6 +19,7 @@ import { Live } from "./pages/Live";
 import { GetStarted } from "./pages/GetStarted";
 import { ScanResult } from "./pages/ScanResult";
 import { Docs } from "./pages/Docs";
+import { AdvisorDashboard } from "./pages/AdvisorDashboard";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -39,6 +40,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/proof" element={<Proof />} />
           <Route path="/improvements" element={<Improvements />} />
           <Route path="/get-started" element={<GetStarted />} />
+          <Route path="/advisor" element={<AdvisorDashboard />} />
           {/* Legacy QA routes (kept for backward compatibility) */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/results/:id" element={<Results />} />

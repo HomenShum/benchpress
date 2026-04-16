@@ -342,3 +342,80 @@ export function getJudgeSession(id: string): Promise<JudgeSessionDetail> {
 export function getBenchmarkResults(): Promise<BenchmarkResults> {
   return request<BenchmarkResults>("/api/benchmark/results");
 }
+
+// --------------------------------------------------------------------------
+// Advisor Mode API
+// --------------------------------------------------------------------------
+
+export interface AdvisorModelBreakdown {
+  model: string;
+  calls: number;
+  total_tokens: number;
+  total_cost_usd: number;
+  avg_tokens_per_call: number;
+  role: string;
+}
+
+export interface AdvisorStats {
+  total_sessions: number;
+  total_decisions: number;
+  total_pipeline_runs: number;
+  executor_total_cost_usd: number;
+  advisor_total_cost_usd: number;
+  combined_total_cost_usd: number;
+  advisor_cost_share_pct: number;
+  executor_total_tokens: number;
+  advisor_total_tokens: number;
+  escalation_rate_pct: number;
+  advisor_resolved_pct: number;
+  avg_user_corrections: number;
+  estimated_opus_only_cost_usd: number;
+  savings_vs_opus_only_pct: number;
+  models_seen: string[];
+  model_breakdown: AdvisorModelBreakdown[];
+}
+
+export interface AdvisorStatsResponse {
+  stats: AdvisorStats;
+  message: string;
+}
+
+export interface AdvisorSession {
+  session_id: string;
+  subject: string;
+  executor_model: string;
+  advisor_model: string;
+  executor_tokens: number;
+  executor_cost_usd: number;
+  advisor_tokens: number;
+  advisor_cost_usd: number;
+  escalation_count: number;
+  task_completed: boolean;
+  user_corrections: number;
+  timestamp: string;
+}
+
+export interface AdvisorDecision {
+  decision_id: string;
+  session_id: string;
+  trigger: string;
+  advisor_model: string;
+  advisor_tokens: number;
+  advisor_cost_usd: number;
+  advice_type: string;
+  advice_summary: string;
+  was_applied: boolean;
+  timestamp: string;
+}
+
+export function getAdvisorStats(): Promise<AdvisorStatsResponse> {
+  return request<AdvisorStatsResponse>("/api/advisor/stats");
+}
+
+export function getAdvisorSessions(): Promise<{ sessions: AdvisorSession[] }> {
+  return request<{ sessions: AdvisorSession[] }>("/api/advisor/sessions");
+}
+
+export function getAdvisorDecisions(): Promise<{ decisions: AdvisorDecision[] }> {
+  return request<{ decisions: AdvisorDecision[] }>("/api/advisor/decisions");
+}
