@@ -1,0 +1,131 @@
+[
+  {
+    "case_id": "EVAL-001",
+    "query": "What's happening with our milk delivery?",
+    "flash_alone": {
+      "factual_specificity": 1,
+      "policy_mapping": 1,
+      "action_quality": 6,
+      "completeness": 8,
+      "overall_score": 4.0,
+      "verdict": "fail",
+      "rationale": "The response provides structurally sound generic retail advice but completely fails to include the required specific references (ISS-001, SKU-4411, DairyFresh Co, POL-INV-003), resulting in poor factual specificity and policy mapping.",
+      "_judge_cost_usd": 0.0020225,
+      "factual_alignment": 1,
+      "policy_grounding": 1,
+      "actionability": 6
+    },
+    "pro_alone": {
+      "factual_specificity": 0,
+      "policy_mapping": 1,
+      "action_quality": 3,
+      "completeness": 5,
+      "overall_score": 2.25,
+      "verdict": "fail",
+      "rationale": "The response provides purely generic retail advice and completely fails to incorporate the required specific references (ISS-001, SKU-4411, DairyFresh Co, POL-INV-003) or provide strict, time-bound operational directives.",
+      "_judge_cost_usd": 0.0020350000000000004,
+      "factual_alignment": 0,
+      "policy_grounding": 1,
+      "actionability": 3
+    },
+    "flash_plus_skill": {
+      "factual_specificity": 1,
+      "policy_mapping": 1,
+      "action_quality": 9,
+      "completeness": 9,
+      "overall_score": 5.0,
+      "verdict": "fail",
+      "rationale": "Although the response provides highly specific, time-bound actions and covers all structural requirements, it completely hallucinates the issue ID, SKU, vendor, and policy ID instead of using the required references.",
+      "_judge_cost_usd": 0.00132125,
+      "factual_alignment": 1,
+      "policy_grounding": 1,
+      "actionability": 9
+    }
+  },
+  {
+    "case_id": "EVAL-002",
+    "query": "We're short-staffed today, 3 people called out. What should I do?",
+    "flash_alone": {
+      "factual_specificity": 3,
+      "policy_mapping": 2,
+      "action_quality": 6,
+      "completeness": 9,
+      "overall_score": 5.0,
+      "verdict": "fail",
+      "rationale": "The response provides a solid structural framework for operational triage but completely fails to cite the required policy IDs (ISS-003, POL-HR-007) and lacks hard metrics like exact time windows or temperature thresholds.",
+      "_judge_cost_usd": 0.0019275,
+      "factual_alignment": 3,
+      "policy_grounding": 2,
+      "actionability": 6
+    },
+    "pro_alone": {
+      "factual_specificity": 2,
+      "policy_mapping": 2,
+      "action_quality": 6,
+      "completeness": 8,
+      "overall_score": 4.5,
+      "verdict": "fail",
+      "rationale": "The response provides structurally sound but highly generic retail advice, completely failing to cite the required policy IDs (ISS-003, POL-HR-007) or specific operational thresholds.",
+      "_judge_cost_usd": 0.00199875,
+      "factual_alignment": 2,
+      "policy_grounding": 2,
+      "actionability": 6
+    },
+    "flash_plus_skill": {
+      "factual_specificity": 3,
+      "policy_mapping": 1,
+      "action_quality": 9,
+      "completeness": 9,
+      "overall_score": 5.5,
+      "verdict": "partial",
+      "rationale": "The response provides excellent, time-bound operational actions but completely fails to cite the required references (ISS-003, POL-HR-007), hallucinating an incorrect policy ID instead.",
+      "_judge_cost_usd": 0.0015574999999999999,
+      "factual_alignment": 3,
+      "policy_grounding": 1,
+      "actionability": 9
+    }
+  },
+  {
+    "case_id": "EVAL-003",
+    "query": "Our walk-in cooler is at 52 degrees, what do I do?",
+    "flash_alone": {
+      "factual_specificity": 4,
+      "policy_mapping": 2,
+      "action_quality": 8,
+      "completeness": 9,
+      "overall_score": 5.75,
+      "verdict": "partial",
+      "rationale": "While the response provides excellent, time-bound operational steps and covers the full incident lifecycle, it completely fails to cite the required specific policy IDs (ISS-004, POL-MAINT-001), relying instead on generic policy names.",
+      "_judge_cost_usd": 0.0019212499999999998,
+      "factual_alignment": 4,
+      "policy_grounding": 2,
+      "actionability": 8
+    },
+    "pro_alone": {
+      "factual_specificity": 4,
+      "policy_mapping": 2,
+      "action_quality": 8,
+      "completeness": 7,
+      "overall_score": 5.25,
+      "verdict": "fail",
+      "rationale": "The response provides strong operational steps but completely fails to cite the required policy IDs (ISS-004, POL-MAINT-001), relies on generic policy names, and cuts off mid-sentence at the end.",
+      "_judge_cost_usd": 0.0020812499999999998,
+      "factual_alignment": 4,
+      "policy_grounding": 2,
+      "actionability": 8
+    },
+    "flash_plus_skill": {
+      "factual_specificity": 8,
+      "policy_mapping": 5,
+      "action_quality": 10,
+      "completeness": 10,
+      "overall_score": 8.25,
+      "verdict": "partial",
+      "rationale": "Delivers exceptional, time-bound operational directives and covers all completeness criteria, but loses points for completely omitting the required ISS-004 policy reference.",
+      "_judge_cost_usd": 0.00140375,
+      "factual_alignment": 8,
+      "policy_grounding": 5,
+      "actionability": 10
+    }
+  }
+]

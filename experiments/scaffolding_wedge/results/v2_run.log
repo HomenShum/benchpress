@@ -3,4 +3,55 @@
 EVAL-001: What's happening with our milk delivery?
 ============================================================
   [A] Flash alone (minimal context)... 1021 tok $0.000268
-  [B] Pro alone (minimal context)... 
+  [B] Pro alone (minimal context)... 1027 tok $0.004505
+  [C] Flash + distilled skill... 833 tok $0.000150
+
+============================================================
+EVAL-002: We're short-staffed today, 3 people called out. What sh
+============================================================
+  [A] Flash alone (minimal context)... 983 tok $0.000255
+  [B] Pro alone (minimal context)... 1068 tok $0.004669
+  [C] Flash + distilled skill... 963 tok $0.000192
+
+============================================================
+EVAL-003: Our walk-in cooler is at 52 degrees, what do I do?
+============================================================
+  [A] Flash alone (minimal context)... 953 tok $0.000246
+  [B] Pro alone (minimal context)... 1215 tok $0.005415
+  [C] Flash + distilled skill... 942 tok $0.000169
+
+Raw v2 saved to D:\VSCode Projects\cafecorner_nodebench\nodebench-qa\experiments\scaffolding_wedge\results\raw_responses_v2.json
+
+============================================================
+JUDGING (stricter rubric)
+============================================================
+  judging EVAL-001 / flash_alone... score=4.0 verdict=fail
+  judging EVAL-001 / pro_alone... score=2.25 verdict=fail
+  judging EVAL-001 / flash_plus_skill... score=5.0 verdict=fail
+  judging EVAL-002 / flash_alone... score=5.0 verdict=fail
+  judging EVAL-002 / pro_alone... score=4.5 verdict=fail
+  judging EVAL-002 / flash_plus_skill... score=5.5 verdict=partial
+  judging EVAL-003 / flash_alone... score=5.75 verdict=partial
+  judging EVAL-003 / pro_alone... score=5.25 verdict=fail
+  judging EVAL-003 / flash_plus_skill... score=8.25 verdict=partial
+
+Judgments v2 saved to D:\VSCode Projects\cafecorner_nodebench\nodebench-qa\experiments\scaffolding_wedge\results\judgments_v2.json
+
+============================================================
+RESULTS
+============================================================
+  flash_alone         : avg_score=4.92  avg_cost=$0.000256
+  pro_alone           : avg_score=4.00  avg_cost=$0.004863
+  flash_plus_skill    : avg_score=6.25  avg_cost=$0.000170
+
+  Quality retention (Flash+skill vs Pro): 156.2%
+  Cost fraction  (Flash+skill vs Pro):    3.5%
+Traceback (most recent call last):
+  File "D:\VSCode Projects\cafecorner_nodebench\nodebench-qa\experiments\scaffolding_wedge\run_v2.py", line 347, in <module>
+    main()
+  File "D:\VSCode Projects\cafecorner_nodebench\nodebench-qa\experiments\scaffolding_wedge\run_v2.py", line 337, in main
+    print(f"  Quality uplift (Flash+skill \u2212 Flash):   +{uplift:.2f}")
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2212' in position 30: character maps to <undefined>
