@@ -22,21 +22,46 @@ Think: **Chef for agent runtimes, not apps**.
 
 ## Runtime Diagram
 
+Trace ingestion is source-agnostic. Any observed execution produces a CanonicalTrace — whether it comes from a Claude Code interactive session, an existing deployed codebase's runtime logs, or a one-shot JSONL upload.
+
 ```
-USER CLAUDE CODE SESSION                          <-- expensive run (source of truth)
-(Sonnet executor + Opus advisor, real tools)
-   |
-   |  attrition MCP plugin / /capture hook / WebSocket
-   |  streams: messages, tool calls, usage tokens,
-   |           file edits, advisor consultations
-   v
-+--------------------------------------------------+
-| TRACE INGEST                                     |
-|  - CanonicalTrace{steps[], tools[], handoffs[],  |
-|                   stateDiff[], costUsd, model}   |
-|  - Optional: user repo URL + CLAUDE.md          |
-|  - Privacy: secrets scrubbed at ingest boundary  |
-+--------------------------------------------------+
+                    INPUT SOURCES (any of these)
+                    -----------------------------
+
+ A. CLAUDE CODE SESSION          B. EXISTING CODEBASE           C. OTHER SOURCES
+ (Sonnet + Opus advisor)         (e.g. FloorAI Convex agent)    (Cursor/Windsurf,
+ real tools, interactive         already in production with     LangSmith, OpenAI
+                                 Gemini 3.1 Pro + Flash         proxy logs, raw
+ .claude/hooks + MCP plugin      Lite, running real queries)    JSONL upload)
+ .------------------------.      .-------------------------.    .-----------------.
+ | PostToolUse -> capture |      | await fetch(attrition/  |    | CLI: attrition  |
+ | SubagentStop -> capture|      |   push-packet) in agent |    |  upload file    |
+ | Stop -> flush session  |      |   action (one-liner)    |    | or REST POST    |
+ '------------------------'      '-------------------------'    '-----------------'
+         |                              |                               |
+         +--- WebSocket / HTTP POST -----+-------- /push-packet ---------+
+                                        |
+                                        v
++------------------------------------------------------------------+
+| NORMALIZER  (source-agnostic)                                    |
+|   schema-detects: Claude hooks | Convex agent | OpenAI dict |    |
+|                   LangSmith tree | Cursor log | raw JSONL        |
+|   scrubs: API keys, emails, URLs with tokens, cache paths        |
+|   optional: attach repo URL + CLAUDE.md / AGENTS.md              |
++------------------------------------------------------------------+
+                                        |
+                                        v
++------------------------------------------------------------------+
+| TRACE INGEST                                                     |
+|  CanonicalTrace{                                                 |
+|    sessionId, sourceModel, advisorModel?,                        |
+|    steps[], tools[], handoffs[], stateDiff[],                    |
+|    totalCostUsd, durationMs, totalTokens,                        |
+|    repoContext?: { url, claudeMd?, agentsMd? }                   |
+|  }                                                               |
+|  Stored in Convex `retention_packets` table (already proven      |
+|  end-to-end via the FloorAI integration — 3 real packets)        |
++------------------------------------------------------------------+
    |
    v
 +--------------------------------------------------+
