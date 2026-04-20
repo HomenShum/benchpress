@@ -13,6 +13,9 @@ import {
   daasAuditLog,
   daasApiKeys,
   daasBenchmarkRuns,
+  daasExternalizations,
+  daasFidelityTrials,
+  daasFidelityVerdicts,
 } from "./domains/daas/schema";
 
 export default defineSchema({
@@ -24,4 +27,7 @@ export default defineSchema({
   daasAuditLog,
   daasApiKeys,
   daasBenchmarkRuns,
+  daasExternalizations,
+  daasFidelityTrials,
+  daasFidelityVerdicts,
 });

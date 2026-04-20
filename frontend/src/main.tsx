@@ -5,6 +5,7 @@ import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { ChatProvider } from "./contexts/ChatContext";
 import { Landing } from "./pages/Landing";
 import { DaasPage } from "./pages/DaasPage";
+import { Fidelity } from "./pages/Fidelity";
 
 // Attrition's own Convex deployment (daas domain).
 // Override via VITE_CONVEX_URL if running against dev deployment.
@@ -39,6 +40,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/daas" element={<DaasPage />} />
+            <Route path="/fidelity" element={<Fidelity />} />
           <Route path="/scan/:id" element={<ScanResult />} />
           <Route path="/docs" element={<Docs />} />
           <Route path="/live" element={<Live />} />

@@ -207,11 +207,17 @@ def live_replay(
     key = api_key or _resolve_api_key()
     prompt = _format_prompt(task)
 
+    # Pro's CoT is ~2-3× longer than Flash Lite's. A 2048-token budget
+    # truncates Pro before the final "The answer is X" line and the
+    # extractor silently misses. Verified by inspecting Pro failures on
+    # engineering tasks: 3/6 failures were budget truncations, not wrong
+    # answers. Budget the model appropriately.
+    max_tokens = 4096 if "pro" in model else 2048
     body = {
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {
             "temperature": 0.0,
-            "maxOutputTokens": 2048,
+            "maxOutputTokens": max_tokens,
         },
     }
     url = GEMINI_URL_TEMPLATE.format(model=model, key=key)
@@ -233,12 +239,22 @@ def live_replay(
     duration_ms = int((time.time() - started) * 1000)
 
     text = ""
+    finish_reason = None
     candidates = payload.get("candidates") or []
     if candidates:
-        parts = (candidates[0].get("content") or {}).get("parts") or []
+        c0 = candidates[0]
+        finish_reason = c0.get("finishReason")
+        parts = (c0.get("content") or {}).get("parts") or []
         text = "".join(str(p.get("text", "")) for p in parts)
 
     letter = extract_letter(text)
+
+    # HONEST_STATUS — truncation is not a wrong answer, it's a harness
+    # config failure. Surface it distinctly so rollups can exclude these
+    # from pass rates rather than counting them as failures.
+    truncation_error = None
+    if finish_reason == "MAX_TOKENS" and letter is None:
+        truncation_error = f"truncated_at_max_tokens ({max_tokens})"
 
     usage = payload.get("usageMetadata") or {}
     in_tok = int(usage.get("promptTokenCount", 0))
@@ -257,7 +273,8 @@ def live_replay(
             "output_tokens": out_tok,
             "cost_usd": cost,
             "duration_ms": duration_ms,
-            "error": None,
+            "finish_reason": finish_reason,
+            "error": truncation_error,
         },
     }
 

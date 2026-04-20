@@ -268,6 +268,128 @@ export const DAAS_BENCHMARK_IDS = [
   "reportbench",
 ] as const;
 
+/**
+ * daasExternalizations — compile-time distillation artifacts.
+ *
+ * Every form of distillation (prompt / tool_schema / scaffold_graph) is
+ * stored here as an opaque JSON blob. The schema DOES NOT interpret the
+ * blob — interpretation is the form-specific trial runner's job.
+ *
+ * BOUND: artifactJson capped at 32KB (recordExternalization mutation
+ * enforces). The entire artifact is loaded into the small model's
+ * context on every distilled measurement, so bigger artifacts = more
+ * tokens = higher cost per task.
+ */
+export const DAAS_EXTERNALIZATION_FORMS = [
+  "prompt",
+  "tool_schema",
+  "scaffold_graph",
+] as const;
+
+export const daasExternalizations = defineTable({
+  /** Stable human-readable identifier (e.g. "mmlu_pro_cot_v1"). Unique per row. */
+  externalizationId: v.string(),
+  /** One of DAAS_EXTERNALIZATION_FORMS */
+  form: v.string(),
+  /** Form-specific JSON payload; size-bounded by mutation */
+  artifactJson: v.string(),
+  /** Which big model this was distilled from (for provenance + attribution) */
+  sourceModel: v.string(),
+  /** Source trace session ids used to distill; empty array = hand-authored */
+  sourceTraceIdsJson: v.string(),
+  /** Short human note ("baseline cot", "v2 with worked example", etc.) */
+  notes: v.optional(v.string()),
+  createdAt: v.number(),
+})
+  .index("by_externalizationId", ["externalizationId"])
+  .index("by_form_createdAt", ["form", "createdAt"])
+  .index("by_createdAt", ["createdAt"]);
+
+/**
+ * daasFidelityTrials — per-task 3-measurement records.
+ *
+ * One row per (externalization, benchmark, task). Storing per-task (not
+ * aggregated) lets us:
+ *   1. Recompute the verdict when the classifier changes
+ *   2. Drill into which tasks the scaffold helped vs hurt
+ *   3. Split rollups by subject / category after the fact
+ *
+ * Error fields are distinct from pass/fail — a harness error excludes
+ * that trial from the pass rate denominator, not an automatic failure.
+ */
+export const daasFidelityTrials = defineTable({
+  externalizationId: v.string(),
+  benchmarkId: v.string(),
+  taskId: v.string(),
+  baselineModel: v.string(),
+  ceilingModel: v.string(),
+  distilledModel: v.string(),
+  baselinePassed: v.boolean(),
+  ceilingPassed: v.boolean(),
+  distilledPassed: v.boolean(),
+  baselineCostUsd: v.number(),
+  ceilingCostUsd: v.number(),
+  distilledCostUsd: v.number(),
+  baselineError: v.optional(v.string()),
+  ceilingError: v.optional(v.string()),
+  distilledError: v.optional(v.string()),
+  createdAt: v.number(),
+})
+  .index("by_externalizationId_createdAt", ["externalizationId", "createdAt"])
+  .index("by_externalizationId_benchmarkId", ["externalizationId", "benchmarkId"])
+  .index("by_taskId", ["taskId"])
+  .index("by_createdAt", ["createdAt"]);
+
+/**
+ * daasFidelityVerdicts — cached aggregated verdicts per (ext, benchmark) pair.
+ *
+ * Appended by the trial runner at the end of each run. Multiple verdicts
+ * per pair exist (one per run); queries take the latest unless a specific
+ * runId is requested. verdict is one of DAAS_TRANSFER_VERDICTS.
+ */
+export const DAAS_TRANSFER_VERDICTS = [
+  "transfers",
+  "lossy",
+  "no_gap",
+  "regression",
+  "insufficient_data",
+] as const;
+
+export const daasFidelityVerdicts = defineTable({
+  externalizationId: v.string(),
+  benchmarkId: v.string(),
+  /** One of DAAS_TRANSFER_VERDICTS */
+  verdict: v.string(),
+  /** Sample size used for this verdict (after error exclusions) */
+  n: v.number(),
+  /** Baseline pass rate (0..1) */
+  baselineRate: v.number(),
+  baselineCiLo: v.number(),
+  baselineCiHi: v.number(),
+  ceilingRate: v.number(),
+  ceilingCiLo: v.number(),
+  ceilingCiHi: v.number(),
+  distilledRate: v.number(),
+  distilledCiLo: v.number(),
+  distilledCiHi: v.number(),
+  gapPp: v.number(),
+  transferPp: v.number(),
+  /** transfer / gap when gap > 0; null (omitted) otherwise */
+  fidelityPct: v.optional(v.number()),
+  gapSignificant: v.boolean(),
+  transferSignificant: v.boolean(),
+  regressionSignificant: v.boolean(),
+  /** One-line human explanation + next-action */
+  narrative: v.string(),
+  /** Total cost of this verdict's trials (baseline + ceiling + distilled) */
+  totalCostUsd: v.number(),
+  createdAt: v.number(),
+})
+  .index("by_externalizationId_createdAt", ["externalizationId", "createdAt"])
+  .index("by_benchmarkId_createdAt", ["benchmarkId", "createdAt"])
+  .index("by_verdict_createdAt", ["verdict", "createdAt"])
+  .index("by_createdAt", ["createdAt"]);
+
 export const daasBenchmarkRuns = defineTable({
   /** One of DAAS_BENCHMARK_IDS */
   benchmarkId: v.string(),

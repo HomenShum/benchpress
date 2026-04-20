@@ -11,6 +11,7 @@
 import type * as domains_daas_actions from "../domains/daas/actions.js";
 import type * as domains_daas_admin from "../domains/daas/admin.js";
 import type * as domains_daas_benchmarks from "../domains/daas/benchmarks.js";
+import type * as domains_daas_fidelity from "../domains/daas/fidelity.js";
 import type * as domains_daas_http from "../domains/daas/http.js";
 import type * as domains_daas_mutations from "../domains/daas/mutations.js";
 import type * as domains_daas_queries from "../domains/daas/queries.js";
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   "domains/daas/actions": typeof domains_daas_actions;
   "domains/daas/admin": typeof domains_daas_admin;
   "domains/daas/benchmarks": typeof domains_daas_benchmarks;
+  "domains/daas/fidelity": typeof domains_daas_fidelity;
   "domains/daas/http": typeof domains_daas_http;
   "domains/daas/mutations": typeof domains_daas_mutations;
   "domains/daas/queries": typeof domains_daas_queries;

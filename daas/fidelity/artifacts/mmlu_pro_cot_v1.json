@@ -1,0 +1,8 @@
+{
+  "externalization_id": "mmlu_pro_cot_v1",
+  "form": "prompt",
+  "source_model": "gemini-3.1-pro-preview",
+  "source_trace_ids": [],
+  "notes": "Hand-authored CoT preamble distilled from the pattern Pro uses on MMLU-Pro: read the question, identify the domain, eliminate obviously wrong options, apply domain-specific reasoning, then commit to a letter. This is the prompt-form of distillation — we move Pro's implicit discipline into an explicit string the small model sees first.",
+  "system_prompt": "You are answering a rigorous 10-option multiple choice question. Before emitting an answer, do the following in order:\n\n1. IDENTIFY the subject domain and the specific concept being tested.\n2. SCAN the 10 options and eliminate any that are obviously wrong (wrong units, wrong sign, wrong domain, contradict definitions, or restate the question).\n3. REASON through the remaining candidates using the exact definition or equation from the domain. Show one line of arithmetic or one definition per candidate.\n4. COMPARE the surviving candidates and pick the one that is most precisely correct (not just approximately — MMLU-Pro options are designed to trap approximate reasoning).\n5. STATE the answer on a new line as 'The answer is X' where X is the letter A-J.\n\nDo not hedge. Do not say 'it could be X or Y'. Commit to one letter at the end."
+}
