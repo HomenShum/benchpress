@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useAction, useQuery } from "convex/react";
 import { api } from "../_convex/api";
 import { Nav } from "../components/Nav";
+import { HeroDemoLoop } from "../components/HeroDemoLoop";
 
 type TranscriptTurn = { ts: number; role: "user" | "assistant"; content: string };
 
@@ -359,12 +360,21 @@ export function Architect() {
               ))}
             </div>
 
-            {/* Sample verdicts — social proof + calibration before first submit */}
+            {/* Animated hero demo loop — 3 scripted sample triages */}
             <div
               style={{
                 marginTop: 36,
                 padding: "16px 0 0",
                 borderTop: "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              <HeroDemoLoop />
+            </div>
+
+            {/* Static sample verdicts — handpicked reference + calibration */}
+            <div
+              style={{
+                marginTop: 24,
               }}
             >
               <div
@@ -376,7 +386,7 @@ export function Architect() {
                   marginBottom: 12,
                 }}
               >
-                What triage looks like
+                Frozen samples
               </div>
               <div style={{ display: "grid", gap: 10 }}>
                 {SAMPLE_VERDICTS.map((s, i) => (

@@ -15,6 +15,7 @@ import { Link, useParams } from "react-router-dom";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "../_convex/api";
 import { Nav } from "../components/Nav";
+import { downloadBundleAsZip } from "../lib/downloadZip";
 
 type Tab = "scaffold" | "eval" | "world_model";
 
@@ -513,23 +514,43 @@ function ScaffoldTab({ runtimeLane }: { runtimeLane: string }) {
               <code style={{ fontSize: 11 }}>{artifact.targetModel}</code>
             </p>
           </div>
-          <button
-            type="button"
-            onClick={doCopyAll}
-            style={{
-              padding: "6px 12px",
-              background: copiedAll ? "rgba(34,197,94,0.2)" : "rgba(217,119,87,0.15)",
-              border: `1px solid ${copiedAll ? "rgba(34,197,94,0.5)" : "rgba(217,119,87,0.4)"}`,
-              borderRadius: 6,
-              color: copiedAll ? "#22c55e" : "#d97757",
-              fontSize: 11,
-              fontWeight: 500,
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            {copiedAll ? "Copied!" : "Copy all files"}
-          </button>
+          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!slug || files.length === 0) return;
+                await downloadBundleAsZip(`${slug}-${runtimeLane}`, files);
+              }}
+              style={{
+                padding: "6px 12px",
+                background: "rgba(34,197,94,0.12)",
+                border: "1px solid rgba(34,197,94,0.4)",
+                borderRadius: 6,
+                color: "#22c55e",
+                fontSize: 11,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              Download ZIP
+            </button>
+            <button
+              type="button"
+              onClick={doCopyAll}
+              style={{
+                padding: "6px 12px",
+                background: copiedAll ? "rgba(34,197,94,0.2)" : "rgba(217,119,87,0.15)",
+                border: `1px solid ${copiedAll ? "rgba(34,197,94,0.5)" : "rgba(217,119,87,0.4)"}`,
+                borderRadius: 6,
+                color: copiedAll ? "#22c55e" : "#d97757",
+                fontSize: 11,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              {copiedAll ? "Copied!" : "Copy all files"}
+            </button>
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 12, minHeight: 360 }}>
