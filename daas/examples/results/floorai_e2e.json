@@ -1,0 +1,62 @@
+{
+  "results": [
+    {
+      "session_id": "floorai_attrition_milk_1776648272",
+      "query": "What's happening with our milk delivery?",
+      "store_id": "STR-101",
+      "expert_cost": 0.007041249999999999,
+      "distill_cost": 0.0033637499999999996,
+      "replay_cost": 0.0008067,
+      "workers": [
+        "InventoryAnalyst",
+        "RegionalImpactAnalyst",
+        "PolicyActionPlanner"
+      ],
+      "verdict": "fail",
+      "passed": 4.0,
+      "total": 10.0
+    },
+    {
+      "session_id": "floorai_attrition_staffing_1776648352",
+      "query": "We're short-staffed today, 3 people called out. What should I do?",
+      "store_id": "STR-103",
+      "expert_cost": 0.006145,
+      "distill_cost": 0.003125,
+      "replay_cost": 0.0005786999999999999,
+      "workers": [
+        "StaffingAnalyzer",
+        "PolicyAdvisor"
+      ],
+      "verdict": "fail",
+      "passed": 4.0,
+      "total": 10.0
+    },
+    {
+      "session_id": "floorai_attrition_cooler_1776648428",
+      "query": "Our walk-in cooler is at 52 degrees, what do I do?",
+      "store_id": "STR-104",
+      "expert_cost": 0.00603625,
+      "distill_cost": 0.0027949999999999997,
+      "replay_cost": 0.00059175,
+      "workers": [
+        "ContextRetriever",
+        "PolicyAnalyst",
+        "ActionPlanner"
+      ],
+      "verdict": "partial",
+      "passed": 7.0,
+      "total": 10.0
+    }
+  ],
+  "stats": {
+    "avgCostDeltaPct": -89.77418099348313,
+    "failCount": 2.0,
+    "partialCount": 1.0,
+    "passCount": 0.0,
+    "totalChecksEvaluated": 30.0,
+    "totalChecksPassed": 15.0,
+    "totalJudgments": 3.0,
+    "totalReplays": 3.0,
+    "totalRuns": 3.0
+  }
+}

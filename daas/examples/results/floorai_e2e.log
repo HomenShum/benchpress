@@ -1,0 +1,67 @@
+Running E2E against attrition Convex: https://joyous-walrus-428.convex.cloud
+
+
+============================================================
+[FloorAI] What's happening with our milk delivery?
+session: floorai_attrition_milk_1776648272
+
+[1] Pro (expert)...
+    cost=$0.007041 tokens=4397
+[2] HTTP ingest...
+    traceId=js70ysebrv4z7fern43mmzvm39857s2n
+[3] Distill...
+    workers=3.0 tools=3.0 cost=$0.003364
+[4] Replay...
+    dispatched: ['InventoryAnalyst', 'RegionalImpactAnalyst', 'PolicyActionPlanner']
+    cost=$0.000807  (original was $0.007041)
+[5] Judge (retail_ops rubric)...
+    verdict=fail  4.0/10.0
+
+============================================================
+[FloorAI] We're short-staffed today, 3 people called out. What should I do?
+session: floorai_attrition_staffing_1776648352
+
+[1] Pro (expert)...
+    cost=$0.006145 tokens=4226
+[2] HTTP ingest...
+    traceId=js78a94q90h07kwd6z4njbvd8h857jbz
+[3] Distill...
+    workers=2.0 tools=4.0 cost=$0.003125
+[4] Replay...
+    dispatched: ['StaffingAnalyzer', 'PolicyAdvisor']
+    cost=$0.000579  (original was $0.006145)
+[5] Judge (retail_ops rubric)...
+    verdict=fail  4.0/10.0
+
+============================================================
+[FloorAI] Our walk-in cooler is at 52 degrees, what do I do?
+session: floorai_attrition_cooler_1776648428
+
+[1] Pro (expert)...
+    cost=$0.006036 tokens=4202
+[2] HTTP ingest...
+    traceId=js71pd9x53w6mpm3etp2f23zj1856py5
+[3] Distill...
+    workers=3.0 tools=4.0 cost=$0.002795
+[4] Replay...
+    dispatched: ['ContextRetriever', 'PolicyAnalyst', 'ActionPlanner']
+    cost=$0.000592  (original was $0.006036)
+[5] Judge (retail_ops rubric)...
+    verdict=partial  7.0/10.0
+
+
+============================================================
+AGGREGATE (attrition Convex):
+  avgCostDeltaPct: -89.77418099348313
+  failCount: 2.0
+  partialCount: 1.0
+  passCount: 0.0
+  totalChecksEvaluated: 30.0
+  totalChecksPassed: 15.0
+  totalJudgments: 3.0
+  totalReplays: 3.0
+  totalRuns: 3.0
+
+Saved D:\VSCode Projects\cafecorner_nodebench\nodebench-qa\daas\examples\results\floorai_e2e.json
+
+View at: https://attrition.sh/daas
