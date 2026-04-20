@@ -116,6 +116,130 @@ const INTENT_LABEL: Record<string, string> = {
   unknown: "Unknown — need more detail",
 };
 
+// --- Derived recommendation mappings (client-side, deterministic) --------
+// SDK fit is derived from runtimeLane so the landing doesn't need a
+// Convex redeploy when we add / refine target SDKs.
+const SDK_FIT: Record<
+  string,
+  { primary: string; secondary: string; note: string }
+> = {
+  simple_chain: {
+    primary: "Raw HTTP / any provider SDK",
+    secondary: "OpenAI Agents SDK · Google Gemini",
+    note: "Single LLM call + schema. Pick the cheapest provider that hits the contract.",
+  },
+  tool_first_chain: {
+    primary: "OpenAI Agents SDK",
+    secondary: "Google Gemini function-calling · Claude tool_use",
+    note: "Bounded tool loop. Native function-calling beats prompt-engineered tool calls.",
+  },
+  orchestrator_worker: {
+    primary: "Anthropic Claude Agent SDK",
+    secondary: "LangGraph · OpenAI Agents SDK multi-agent",
+    note: "Plan → dispatch → compact with shared scratchpad. Claude Agent SDK is the canonical pattern; LangGraph if you already run it.",
+  },
+  openai_agents_sdk: {
+    primary: "OpenAI Agents SDK",
+    secondary: "LangGraph",
+    note: "Keep SDK parity if your prod is already on OpenAI.",
+  },
+  langgraph_python: {
+    primary: "LangGraph",
+    secondary: "OpenAI Agents SDK",
+    note: "Graph-state stateful runs; natural fit for long-horizon workflows.",
+  },
+};
+
+// Component layers a generated scaffold will ship with, indexed by
+// (runtimeLane, worldModelLane). World model presence adds a policy
+// + outcome-encoding layer per the Block world-model framing.
+function componentLayersFor(
+  runtimeLane: string,
+  worldModelLane: string,
+): string[] {
+  const full = worldModelLane === "full";
+  switch (runtimeLane) {
+    case "orchestrator_worker":
+    case "openai_agents_sdk":
+    case "langgraph_python":
+      return [
+        "Capture + normalize (trace → WorkflowSpec)",
+        "Plan step (LLM → JSON worker assignments)",
+        "Per-worker dispatch (bounded tool loop)",
+        "Shared scratchpad + compaction",
+        "Connector resolver (mock / live / hybrid)",
+        ...(full
+          ? [
+              "Policy engine (must-have source ref · amount bounds · trend gating)",
+              "Outcome encoder (what happened → what was decided → result)",
+            ]
+          : []),
+        "Judge + benchmark rubric (boolean structural + LLM semantic)",
+      ];
+    case "tool_first_chain":
+      return [
+        "Capture + normalize (trace → WorkflowSpec)",
+        "Single-LLM tool loop (bounded, MAX_TURNS cap)",
+        "Connector resolver (mock / live / hybrid)",
+        ...(full
+          ? [
+              "Policy engine (claim gating · source-ref required)",
+              "Outcome encoder",
+            ]
+          : []),
+        "Judge + benchmark rubric",
+      ];
+    case "simple_chain":
+    default:
+      return [
+        "Capture + normalize",
+        "Prompt + output-schema contract",
+        ...(full
+          ? [
+              "State table (inputs · outputs · outcome encoded)",
+              "Policy engine",
+            ]
+          : []),
+        "Judge + rubric",
+      ];
+  }
+}
+
+// Interpretive Boundary — which surfaces of the workflow are
+// deterministic ("Act On This") vs LLM-judged ("Interpret First").
+// Adapted from the Block world-model framing (Nate B Jones): we refuse
+// to hide a quiet judgment call behind a deterministic-looking output.
+function interpretiveBoundaryFor(
+  runtimeLane: string,
+  worldModelLane: string,
+): { actOn: string[]; interpretFirst: string[] } {
+  const full = worldModelLane === "full";
+  const out = {
+    actOn: [
+      "Structural schema validation on tool I/O",
+      "Connector-mode dispatch (mock vs live) — deterministic",
+      "AST-parse validity on emitted scaffold",
+      "Token / cost accounting",
+    ] as string[],
+    interpretFirst: [
+      "Final LLM answer quality (boolean rubric → verdict)",
+      "Fidelity vs baseline (transfers / lossy / regression)",
+    ] as string[],
+  };
+  if (full) {
+    out.actOn.push("Policy checks (source-ref · amount bounds)");
+    out.interpretFirst.push("Trend-claim gating (LLM-labeled, policy-enforced)");
+  }
+  if (
+    runtimeLane === "orchestrator_worker" ||
+    runtimeLane === "openai_agents_sdk" ||
+    runtimeLane === "langgraph_python"
+  ) {
+    out.interpretFirst.push("Per-worker plan adherence (scratchpad audit)");
+  }
+  return out;
+}
+
 function shortSlug(): string {
   return Math.random().toString(36).slice(2, 10);
 }
@@ -290,23 +414,71 @@ export function Architect() {
               marginBottom: 6,
             }}
           >
-            Architect
+            attrition.sh · architecture compiler + verification layer
           </div>
-          <h1 style={{ fontSize: 30, fontWeight: 600, margin: 0, letterSpacing: "-0.01em" }}>
-            Describe your workflow.
+          <h1
+            style={{
+              fontSize: 34,
+              fontWeight: 600,
+              margin: 0,
+              letterSpacing: "-0.015em",
+              lineHeight: 1.12,
+              maxWidth: 780,
+            }}
+          >
+            Compile frontier agent runs into cheaper, verified
+            production workflows.
           </h1>
           <p
             style={{
               fontSize: 15,
-              color: "rgba(255,255,255,0.6)",
-              margin: "8px 0 0",
-              maxWidth: 680,
-              lineHeight: 1.5,
+              color: "rgba(255,255,255,0.72)",
+              margin: "10px 0 0",
+              maxWidth: 720,
+              lineHeight: 1.55,
             }}
           >
-            We'll tell you what runtime to use, what world model you need, and
-            whether the distillation gap is even real — before you spend on
-            a scaffold that might be decoration.
+            Capture what worked in Claude Code, Cursor, or your existing
+            agent stack. Distill it into a portable workflow asset.
+            Generate a new runtime, replay it on cheaper models, and
+            ship only what passes.
+          </p>
+          <p
+            style={{
+              fontSize: 13,
+              color: "rgba(255,255,255,0.5)",
+              margin: "6px 0 0",
+              maxWidth: 720,
+              lineHeight: 1.55,
+            }}
+          >
+            We translate workflows between chains, tool runtimes, and
+            orchestrator-worker systems — with judged regression checks,
+            cost deltas, and runnable code. Three motions:{" "}
+            <strong style={{ color: "rgba(255,255,255,0.8)" }}>
+              compile down
+            </strong>
+            ,{" "}
+            <strong style={{ color: "rgba(255,255,255,0.8)" }}>
+              compile up
+            </strong>
+            , and{" "}
+            <strong style={{ color: "rgba(255,255,255,0.8)" }}>
+              translate across
+            </strong>
+            .
+          </p>
+          <p
+            style={{
+              fontSize: 13,
+              color: "rgba(255,255,255,0.55)",
+              margin: "14px 0 0",
+              fontWeight: 500,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Describe your workflow → we stream an architecture
+            recommendation.
           </p>
         </header>
 
@@ -648,6 +820,152 @@ export function Architect() {
                     accent="#22c55e"
                   />
                 </div>
+
+                {/* SDK fit — derived client-side from runtimeLane */}
+                {session?.runtimeLane && SDK_FIT[session.runtimeLane] ? (
+                  <div
+                    style={{
+                      padding: 14,
+                      background: "rgba(34,211,238,0.05)",
+                      border: "1px solid rgba(34,211,238,0.3)",
+                      borderRadius: 10,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 11,
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                        color: "#22d3ee",
+                        marginBottom: 6,
+                      }}
+                    >
+                      SDK fit
+                    </div>
+                    <div style={{ fontSize: 14, color: "rgba(255,255,255,0.9)", marginBottom: 4, fontWeight: 500 }}>
+                      Primary: {SDK_FIT[session.runtimeLane].primary}
+                    </div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", marginBottom: 8 }}>
+                      Also compiles to: {SDK_FIT[session.runtimeLane].secondary}
+                    </div>
+                    <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}>
+                      {SDK_FIT[session.runtimeLane].note}
+                    </p>
+                  </div>
+                ) : null}
+
+                {/* Component layers — the scaffold we'll emit, step by step */}
+                {session?.runtimeLane ? (
+                  <div
+                    style={{
+                      padding: 14,
+                      background: "rgba(217,119,87,0.05)",
+                      border: "1px solid rgba(217,119,87,0.3)",
+                      borderRadius: 10,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 11,
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                        color: "#d97757",
+                        marginBottom: 8,
+                      }}
+                    >
+                      Component layers the scaffold will ship with
+                    </div>
+                    <ol
+                      style={{
+                        margin: 0,
+                        paddingLeft: 22,
+                        fontSize: 13,
+                        lineHeight: 1.6,
+                        color: "rgba(255,255,255,0.82)",
+                      }}
+                    >
+                      {componentLayersFor(
+                        session.runtimeLane,
+                        session.worldModelLane ?? "lite",
+                      ).map((layer, i) => (
+                        <li key={i} style={{ marginBottom: 3 }}>
+                          {layer}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                ) : null}
+
+                {/* Interpretive Boundary — Act On This vs Interpret First */}
+                {session?.runtimeLane ? (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                      gap: 12,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: 14,
+                        background: "rgba(34,197,94,0.05)",
+                        border: "1px solid rgba(34,197,94,0.3)",
+                        borderRadius: 10,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 10,
+                          letterSpacing: "0.16em",
+                          textTransform: "uppercase",
+                          color: "#22c55e",
+                          marginBottom: 6,
+                        }}
+                      >
+                        Act on this · deterministic
+                      </div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, lineHeight: 1.55, color: "rgba(255,255,255,0.78)" }}>
+                        {interpretiveBoundaryFor(
+                          session.runtimeLane,
+                          session.worldModelLane ?? "lite",
+                        ).actOn.map((item, i) => (
+                          <li key={i} style={{ marginBottom: 2 }}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div
+                      style={{
+                        padding: 14,
+                        background: "rgba(245,158,11,0.05)",
+                        border: "1px solid rgba(245,158,11,0.3)",
+                        borderRadius: 10,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 10,
+                          letterSpacing: "0.16em",
+                          textTransform: "uppercase",
+                          color: "#f59e0b",
+                          marginBottom: 6,
+                        }}
+                      >
+                        Interpret this first · judgment
+                      </div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, lineHeight: 1.55, color: "rgba(255,255,255,0.78)" }}>
+                        {interpretiveBoundaryFor(
+                          session.runtimeLane,
+                          session.worldModelLane ?? "lite",
+                        ).interpretFirst.map((item, i) => (
+                          <li key={i} style={{ marginBottom: 2 }}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ) : null}
 
                 {session?.rationale ? (
                   <div

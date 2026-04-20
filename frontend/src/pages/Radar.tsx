@@ -41,6 +41,31 @@ const PRIOR_LOOK: Record<string, { label: string; color: string }> = {
   none: { label: "heartbeat", color: "#64748b" },
 };
 
+// Static architecture-watch commitment. Displayed at the top of Radar
+// so the user sees WHICH sources we scrape — even before the live feed
+// has new items. Each source is tagged with which internal prior it
+// updates so its signal is legible at a glance.
+type WatchSource = {
+  slug: string;
+  prior: "runtime" | "eval" | "world_model";
+  why: string;
+};
+
+const ARCH_WATCH_LIST: WatchSource[] = [
+  { slug: "anthropic/claude-code", prior: "runtime", why: "Canonical orchestrator-worker harness; tool API changes propagate to compile-up targets." },
+  { slug: "cursor/cursor", prior: "runtime", why: "IDE-embedded agent patterns; JSONL trace shape affects our ingest." },
+  { slug: "langchain-ai/langgraph", prior: "runtime", why: "Graph-state stateful runtime — one of our symmetric emit targets." },
+  { slug: "openai/openai-agents-python", prior: "runtime", why: "Our other symmetric emit target; keep parity tests green." },
+  { slug: "windsurf-editor", prior: "runtime", why: "Trace + replay shape diverges from Cursor — extra normalizer coverage." },
+  { slug: "kilocode/kilo", prior: "runtime", why: "Lightweight agent scaffold; useful baseline for compile-down targets." },
+  { slug: "deerflow", prior: "eval", why: "Multi-agent research harness; eval rubrics inform our benchmark picks." },
+  { slug: "harness-agent", prior: "eval", why: "Benchmark harness patterns — judge-design reference." },
+  { slug: "hermes-agent", prior: "eval", why: "Tool-calling benchmark variants; supplements BFCL." },
+  { slug: "anthropic/opus-4.7-benchmarks", prior: "runtime", why: "Frontier-model capability frontier — shifts compile-down cost ceiling." },
+  { slug: "Hacker News (front page)", prior: "runtime", why: "Tier-3 weak signal — upstream chatter catches patterns before official posts." },
+  { slug: "x.com (AI agent + eval queries)", prior: "eval", why: "Tier-3 weak signal — practitioner-reported regressions." },
+];
+
 export function Radar() {
   const [category, setCategory] = useState<Category>("all");
   const [stackFilter, setStackFilter] = useState<string>("all");
@@ -204,6 +229,101 @@ export function Radar() {
             </a>
           </div>
         ) : null}
+
+        {/* Architecture watch list — sources we scrape daily.
+            Visible even when the feed hasn't landed new items yet,
+            so users see our commitment surface. */}
+        <section
+          style={{
+            marginBottom: 18,
+            padding: "14px 16px",
+            background: "rgba(217,119,87,0.04)",
+            border: "1px solid rgba(217,119,87,0.25)",
+            borderRadius: 10,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              color: "#d97757",
+              marginBottom: 8,
+            }}
+          >
+            Architecture watch list · scraped daily
+          </div>
+          <p
+            style={{
+              margin: "0 0 10px",
+              fontSize: 12,
+              lineHeight: 1.5,
+              color: "rgba(255,255,255,0.7)",
+            }}
+          >
+            Every source below is pulled on a schedule. Releases,
+            benchmark deltas, and pattern shifts land in the feed
+            below, each tagged with which internal prior it updates
+            (runtime / eval / world-model).
+          </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+              gap: 8,
+            }}
+          >
+            {ARCH_WATCH_LIST.map((s) => (
+              <div
+                key={s.slug}
+                style={{
+                  padding: "8px 10px",
+                  background: "rgba(0,0,0,0.25)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 6,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 6,
+                    marginBottom: 2,
+                  }}
+                >
+                  <code
+                    style={{
+                      fontSize: 12,
+                      color: "rgba(255,255,255,0.95)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {s.slug}
+                  </code>
+                  <span
+                    style={{
+                      fontSize: 9,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: s.prior === "runtime" ? "#d97757" : s.prior === "eval" ? "#8b5cf6" : "#06b6d4",
+                    }}
+                  >
+                    {s.prior}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: "rgba(255,255,255,0.6)",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {s.why}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Filter bar: category pills + stack dropdown + delta toggle + search */}
         <div

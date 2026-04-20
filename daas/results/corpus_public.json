@@ -24,14 +24,23 @@
     "sessions_replayed_live": 5,
     "transfers": 0,
     "lossy": 0,
-    "regression": 3,
-    "insufficient_data": 2,
-    "decided_denom": 3,
+    "regression": 4,
+    "insufficient_data": 1,
+    "decided_denom": 4,
     "transfer_rate_pct": 0.0,
     "regression_rate_pct": 100.0,
-    "total_usd": 0.024809,
+    "total_usd": 0.033535,
     "flash_model": "gemini-3.1-flash-lite-preview",
     "judge_model": "gemini-3.1-pro-preview",
-    "honest_note": "Current heuristic playbook induction abstracts too aggressively to reproduce specific-file Claude outputs. Regression rate exposes the limit; insufficient_data flags sessions where the baseline answer itself was too trivial to judge."
+    "rubric_kind": "boolean_structured_output_reasoning",
+    "rubric_checks": [
+      "covers_main_points",
+      "reproduces_specific_artifacts",
+      "addresses_user_prompt",
+      "no_hallucination",
+      "structural_coherence",
+      "baseline_is_substantive"
+    ],
+    "honest_note": "Current heuristic playbook induction abstracts too aggressively to reproduce specific-file Claude outputs. Regression rate exposes the limit; insufficient_data flags sessions where the baseline answer itself was too trivial to judge. Verdict is now derived deterministically from a 6-boolean LLM rubric so the rollup is auditable."
   }
 }

@@ -60,23 +60,60 @@ JUDGE_MAX_OUTPUT_TOKENS = 2048
 JUDGE_RUBRIC = """You are a fidelity judge evaluating agent replay.
 
 Given:
-  - USER_PROMPT: what the user asked
+  - USER_PROMPT:     what the user asked
   - ORIGINAL_ANSWER: what an expensive agent produced (baseline)
-  - REPLAY_ANSWER: what a cheap agent produced against the same prompt,
-    using a distilled playbook
+  - REPLAY_ANSWER:   what a cheap agent produced against the same
+                     prompt, using a distilled playbook
 
-Emit a JSON object with exactly these fields (no code fences, pure JSON):
+Do NOT emit a verdict. You emit SIX INDEPENDENT BOOLEAN CHECKS.
+The verdict is derived deterministically downstream from the vector
+of booleans — that separation keeps your job stable and auditable.
+
+Emit a pure JSON object (no code fences) with exactly this shape:
 {
-  "verdict": one of "transfers" | "lossy" | "regression" | "insufficient_data",
-  "reason":  a single sentence explaining the verdict,
-  "missing_items": a short list of items in ORIGINAL_ANSWER that REPLAY_ANSWER failed to cover (empty if transfers)
+  "covers_main_points":             {"bool": true|false, "reason": "one sentence"},
+  "reproduces_specific_artifacts":  {"bool": true|false, "reason": "one sentence"},
+  "addresses_user_prompt":          {"bool": true|false, "reason": "one sentence"},
+  "no_hallucination":               {"bool": true|false, "reason": "one sentence"},
+  "structural_coherence":           {"bool": true|false, "reason": "one sentence"},
+  "baseline_is_substantive":        {"bool": true|false, "reason": "one sentence"}
 }
 
-Criteria:
-  - transfers         : REPLAY covers every substantive point the ORIGINAL covers, or improves on it
-  - lossy             : REPLAY covers most of the high-level structure but misses 1-3 specific items
-  - regression        : REPLAY misses multiple critical items, contradicts ORIGINAL, or fails to address USER_PROMPT
-  - insufficient_data : ORIGINAL_ANSWER is empty / trivial / cannot be meaningfully compared
+Definitions (strict):
+  covers_main_points
+    true  = REPLAY hits every substantive point ORIGINAL hits at the
+            topic/section level.
+    false = REPLAY is missing one or more load-bearing sections the
+            ORIGINAL clearly delivered.
+
+  reproduces_specific_artifacts
+    true  = REPLAY includes the concrete file names / counts / status
+            lines / exact quotes present in ORIGINAL.
+    false = REPLAY substitutes generic plans for ORIGINAL's specifics.
+
+  addresses_user_prompt
+    true  = REPLAY actually answers what USER_PROMPT asked.
+    false = REPLAY drifts off-topic or answers a different question.
+
+  no_hallucination
+    true  = REPLAY invents nothing that USER_PROMPT and the playbook
+            didn't imply.
+    false = REPLAY fabricates details (fake filenames, fake numbers,
+            fake claims).
+
+  structural_coherence
+    true  = REPLAY has the shape of a helpful answer (coherent flow,
+            not noise).
+    false = REPLAY is incoherent, partial, or cut off mid-thought.
+
+  baseline_is_substantive
+    true  = ORIGINAL_ANSWER is rich enough to be a meaningful baseline
+            (> ~80 characters of substantive content).
+    false = ORIGINAL_ANSWER is trivial / a one-liner / empty. Flag this
+            so downstream can emit insufficient_data cleanly.
+
+Every reason must be ONE sentence. Do not combine checks into a single
+verdict — that is computed after you return.
 """
 
 
@@ -199,8 +236,10 @@ class ReplayResult:
     original_answer_preview: str
     replay_answer_preview: str
     verdict: str
-    judge_reason: str
+    judge_reason: str  # composed from individual check reasons
     missing_items: list[str]
+    # Cycle-29 boolean rubric vector + reasons (audit trail)
+    checks: dict  # {check_name: {"bool": bool, "reason": str}}
     flash_in_tokens: int
     flash_out_tokens: int
     judge_in_tokens: int
@@ -232,6 +271,7 @@ def replay_one_session(
             verdict="insufficient_data",
             judge_reason="empty query or empty original answer",
             missing_items=[],
+            checks={},
             flash_in_tokens=0,
             flash_out_tokens=0,
             judge_in_tokens=0,
@@ -263,14 +303,15 @@ def replay_one_session(
         api_key=api_key,
         max_output_tokens=JUDGE_MAX_OUTPUT_TOKENS,
     )
-    verdict, reason, missing = _parse_judge_json(judge_text)
+    verdict, reason, missing, checks = _parse_judge_json(judge_text)
 
     # Persist raw judge response for auditing — helps debug truncation.
     debug_dir = Path("daas/results/_judge_raw")
     debug_dir.mkdir(parents=True, exist_ok=True)
     (debug_dir / f"{jsonl_path.stem}.txt").write_text(
         f"=== JUDGE RAW (len={len(judge_text)}) ===\n{judge_text}\n"
-        f"=== PARSED VERDICT ===\n{verdict}\n{reason}\n",
+        f"=== PARSED CHECKS ===\n{json.dumps(checks, indent=2)}\n"
+        f"=== DERIVED VERDICT ===\n{verdict}\n{reason}\n",
         encoding="utf-8",
     )
 
@@ -285,6 +326,7 @@ def replay_one_session(
         verdict=verdict,
         judge_reason=reason,
         missing_items=missing,
+        checks=checks,
         flash_in_tokens=f_in,
         flash_out_tokens=f_out,
         judge_in_tokens=j_in,
@@ -327,10 +369,72 @@ def _extract_first_balanced_json(s: str) -> str:
     return ""
 
 
-def _parse_judge_json(text: str) -> tuple[str, str, list[str]]:
-    """Tolerant JSON parse — strips code fences + brace-balanced fallback."""
+CHECK_KEYS: tuple[str, ...] = (
+    "covers_main_points",
+    "reproduces_specific_artifacts",
+    "addresses_user_prompt",
+    "no_hallucination",
+    "structural_coherence",
+    "baseline_is_substantive",
+)
+
+
+def _verdict_from_checks(checks: dict) -> tuple[str, str]:
+    """Deterministic rollup from the 6-boolean rubric vector.
+
+    Order:
+      1. If baseline isn't substantive, we can't judge. -> insufficient_data
+      2. If replay contradicts or fails to address the user's prompt,
+         that's a hard fail. -> regression
+      3. Otherwise, count misses among the three "fidelity" bools.
+           0 misses -> transfers
+           1 miss   -> lossy
+           >=2     -> regression
+
+    Returns (verdict, one-sentence composed reason).
+    """
+
+    def b(k: str) -> bool:
+        v = checks.get(k, {})
+        if isinstance(v, dict):
+            return bool(v.get("bool"))
+        return bool(v)
+
+    def r(k: str) -> str:
+        v = checks.get(k, {})
+        if isinstance(v, dict):
+            return str(v.get("reason") or "")
+        return ""
+
+    if not b("baseline_is_substantive"):
+        return "insufficient_data", (r("baseline_is_substantive") or "baseline not substantive")
+
+    if not b("addresses_user_prompt") or not b("no_hallucination"):
+        rr = r("addresses_user_prompt") if not b("addresses_user_prompt") else r("no_hallucination")
+        return "regression", rr
+
+    fidelity_keys = (
+        "covers_main_points",
+        "reproduces_specific_artifacts",
+        "structural_coherence",
+    )
+    misses = [k for k in fidelity_keys if not b(k)]
+    if not misses:
+        return "transfers", "all fidelity checks passed"
+    if len(misses) == 1:
+        return "lossy", r(misses[0])
+    composed = "; ".join(r(k) for k in misses[:2])
+    return "regression", composed[:240]
+
+
+def _parse_judge_json(text: str) -> tuple[str, str, list[str], dict]:
+    """Tolerant JSON parse of the SIX-BOOLEAN rubric.
+
+    Returns (verdict, composed_reason, missing_items, checks_dict).
+    Verdict is derived deterministically from the parsed booleans.
+    """
     if not text:
-        return "insufficient_data", "empty judge response", []
+        return "insufficient_data", "empty judge response", [], {}
     stripped = text.strip()
     if stripped.startswith("```"):
         stripped = re.sub(r"^```(?:json)?\s*", "", stripped)
@@ -339,7 +443,6 @@ def _parse_judge_json(text: str) -> tuple[str, str, list[str]]:
     try:
         obj = json.loads(stripped)
     except json.JSONDecodeError:
-        # Walk for balanced braces
         chunk = _extract_first_balanced_json(stripped)
         if chunk:
             try:
@@ -351,15 +454,32 @@ def _parse_judge_json(text: str) -> tuple[str, str, list[str]]:
             "insufficient_data",
             f"unparseable judge (first 200 chars): {stripped[:200]}",
             [],
+            {},
         )
-    verdict = str(obj.get("verdict") or "").strip().lower()
-    if verdict not in {"transfers", "lossy", "regression", "insufficient_data"}:
-        verdict = "insufficient_data"
-    reason = str(obj.get("reason") or "")
-    missing = obj.get("missing_items") or []
-    if not isinstance(missing, list):
-        missing = [str(missing)]
-    return verdict, reason[:240], [str(x)[:120] for x in missing][:6]
+
+    # Normalize the check dict
+    checks: dict[str, dict] = {}
+    for k in CHECK_KEYS:
+        v = obj.get(k)
+        if isinstance(v, dict):
+            checks[k] = {
+                "bool": bool(v.get("bool")),
+                "reason": str(v.get("reason") or "")[:240],
+            }
+        elif isinstance(v, bool):
+            checks[k] = {"bool": v, "reason": ""}
+        else:
+            # Missing check -> treat as false (conservative)
+            checks[k] = {"bool": False, "reason": "check missing from judge output"}
+
+    verdict, composed = _verdict_from_checks(checks)
+
+    # missing_items fallback: surface failing fidelity checks as the
+    # "what the replay missed" list for the UI.
+    missing = [k for k in ("covers_main_points", "reproduces_specific_artifacts", "structural_coherence")
+               if not checks[k]["bool"]]
+
+    return verdict, composed[:240], missing[:6], checks
 
 
 # --------- CLI entry -----------------------------------------------------

@@ -531,7 +531,7 @@ export function ProofSection() {
             marginBottom: 6,
           }}
         >
-          Live replay · Flash Lite vs Pro-judged baseline · $0.025 total
+          Live replay · Flash Lite vs Pro-judged baseline · $0.034 total · boolean rubric
         </div>
         <div
           style={{
@@ -545,10 +545,96 @@ export function ProofSection() {
           <Metric label="sessions replayed live" value="5" />
           <Metric label="transfers" value="0" accent="#ef4444" />
           <Metric label="lossy" value="0" />
-          <Metric label="regression" value="3" accent="#ef4444" />
-          <Metric label="insufficient_data" value="2" />
-          <Metric label="transfer rate" value="0 / 3" accent="#ef4444" />
+          <Metric label="regression" value="4" accent="#ef4444" />
+          <Metric label="insufficient_data" value="1" />
+          <Metric label="transfer rate" value="0 / 4" accent="#ef4444" />
         </div>
+
+        {/* Boolean rubric — per-check pass rates
+            (LLM judges the 6 bools, verdict rollup is deterministic) */}
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.5)",
+            marginBottom: 6,
+            marginTop: 6,
+          }}
+        >
+          Boolean rubric · per-check pass rate · verdict is deterministic
+        </div>
+        <table
+          style={{
+            width: "100%",
+            fontSize: 11,
+            fontFamily: "'JetBrains Mono', monospace",
+            color: "rgba(255,255,255,0.8)",
+            borderCollapse: "collapse",
+            marginBottom: 12,
+          }}
+        >
+          <thead>
+            <tr
+              style={{
+                color: "rgba(255,255,255,0.45)",
+                fontSize: 10,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                textAlign: "left",
+              }}
+            >
+              <th style={{ padding: "4px 8px", fontWeight: 500 }}>Check</th>
+              <th style={{ padding: "4px 8px", fontWeight: 500 }}>Pass rate</th>
+              <th style={{ padding: "4px 8px", fontWeight: 500 }}>Reads as</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <td style={{ padding: "4px 8px" }}>baseline_is_substantive</td>
+              <td style={{ padding: "4px 8px", color: "#22c55e" }}>4 / 4 · 100%</td>
+              <td style={{ padding: "4px 8px", color: "rgba(255,255,255,0.55)" }}>
+                originals are real
+              </td>
+            </tr>
+            <tr style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <td style={{ padding: "4px 8px" }}>addresses_user_prompt</td>
+              <td style={{ padding: "4px 8px", color: "#22c55e" }}>3 / 4 · 75%</td>
+              <td style={{ padding: "4px 8px", color: "rgba(255,255,255,0.55)" }}>
+                replay stays on-topic
+              </td>
+            </tr>
+            <tr style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <td style={{ padding: "4px 8px" }}>structural_coherence</td>
+              <td style={{ padding: "4px 8px", color: "#22c55e" }}>3 / 4 · 75%</td>
+              <td style={{ padding: "4px 8px", color: "rgba(255,255,255,0.55)" }}>
+                answer-shaped output
+              </td>
+            </tr>
+            <tr style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <td style={{ padding: "4px 8px" }}>no_hallucination</td>
+              <td style={{ padding: "4px 8px", color: "#ef4444" }}>1 / 4 · 25%</td>
+              <td style={{ padding: "4px 8px", color: "rgba(255,255,255,0.55)" }}>
+                replay fabricates specifics
+              </td>
+            </tr>
+            <tr style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <td style={{ padding: "4px 8px" }}>covers_main_points</td>
+              <td style={{ padding: "4px 8px", color: "#ef4444" }}>0 / 4 · 0%</td>
+              <td style={{ padding: "4px 8px", color: "rgba(255,255,255,0.55)" }}>
+                misses load-bearing sections
+              </td>
+            </tr>
+            <tr style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <td style={{ padding: "4px 8px" }}>reproduces_specific_artifacts</td>
+              <td style={{ padding: "4px 8px", color: "#ef4444" }}>0 / 4 · 0%</td>
+              <td style={{ padding: "4px 8px", color: "rgba(255,255,255,0.55)" }}>
+                substitutes generic plans
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
         <p
           style={{
             fontSize: 11.5,
@@ -564,16 +650,17 @@ export function ProofSection() {
           <strong style={{ color: "rgba(255,255,255,0.9)" }}>
             Honest replay verdict:
           </strong>{" "}
-          zero transfers on the first live run. Current heuristic
-          induction abstracts too aggressively — the playbook
-          captures goal / method / angles, but loses the specific
-          filenames, counts, and status lines that the expensive
-          baseline produced. This is the{" "}
+          zero transfers, verdict derived deterministically from the
+          6-boolean rubric above (no single-enum judge call). The
+          rubric exposes the exact failure mode: replay gets the{" "}
+          <em style={{ color: "rgba(255,255,255,0.85)", fontStyle: "normal" }}>shape</em>{" "}
+          right (coherent, on-topic) but fabricates specifics it
+          can&rsquo;t know from the distilled playbook alone. This is the{" "}
           <em style={{ color: "#d97757", fontStyle: "normal" }}>
             &ldquo;know when you can&rsquo;t&rdquo;
           </em>{" "}
-          half of the product working. Flash Lite + judge cost{" "}
-          <code>$0.025</code> total; the regression signal tells us
+          half of the product working. Flash + Pro cost{" "}
+          <code>$0.034</code> total; the per-check reasons tell us
           exactly which phases need tighter schema-level contracts.
         </p>
 

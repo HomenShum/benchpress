@@ -17,7 +17,7 @@ import { api } from "../_convex/api";
 import { Nav } from "../components/Nav";
 import { downloadBundleAsZip } from "../lib/downloadZip";
 
-type Tab = "scaffold" | "eval" | "world_model";
+type Tab = "scaffold" | "eval" | "world_model" | "sources";
 
 const RUNTIME_LABEL: Record<string, string> = {
   simple_chain: "Simple chain",
@@ -353,6 +353,9 @@ export function Builder() {
             <TabBtn active={tab === "world_model"} onClick={() => setTab("world_model")}>
               World model plan
             </TabBtn>
+            <TabBtn active={tab === "sources"} onClick={() => setTab("sources")}>
+              Sources you need
+            </TabBtn>
           </div>
           <div style={{ padding: 24 }}>
             <BetaBanner />
@@ -360,6 +363,12 @@ export function Builder() {
             {tab === "eval" && <EvalTab runtimeLane={session.runtimeLane ?? ""} />}
             {tab === "world_model" && (
               <WorldModelTab worldModelLane={session.worldModelLane ?? "lite"} />
+            )}
+            {tab === "sources" && (
+              <SourcesTab
+                runtimeLane={session.runtimeLane ?? ""}
+                worldModelLane={session.worldModelLane ?? "lite"}
+              />
             )}
           </div>
         </section>
@@ -1084,6 +1093,245 @@ function WorldModelTab({ worldModelLane }: { worldModelLane: string }) {
     </div>
   );
 }
+
+// --- SourcesTab --------------------------------------------------------
+// Lists the concrete connectors / APIs / data sources the user must
+// supply before the emitted scaffold can run in live mode.
+//
+// Synthetic by design: we don't auto-detect a user's stack. We enumerate
+// the shapes attrition knows how to plumb, grouped by:
+//   * Tool / API connectors (per runtimeLane)
+//   * Source-of-truth data (mocked fixtures we ship so the scaffold
+//     runs end-to-end before any live integration work)
+//   * World-model data sources (only when worldModelLane === "full")
+//
+// This is the answer to the user's ask: "we also list out all the steps
+// that are needed, all the sources, all the information that are needed
+// from them. And then we're gonna just synthetically generate it and
+// tell them."
+function SourcesTab({
+  runtimeLane,
+  worldModelLane,
+}: {
+  runtimeLane: string;
+  worldModelLane: string;
+}) {
+  const connectors = connectorsForRuntime(runtimeLane);
+  const fixtures = fixturesForRuntime(runtimeLane);
+  const worldData = worldModelLane === "full" ? WORLD_MODEL_DATA : [];
+
+  return (
+    <div style={{ display: "grid", gap: 20 }}>
+      <div
+        style={{
+          padding: "12px 14px",
+          background: "rgba(34,211,238,0.05)",
+          border: "1px solid rgba(34,211,238,0.25)",
+          borderRadius: 10,
+          fontSize: 12,
+          lineHeight: 1.55,
+          color: "rgba(255,255,255,0.78)",
+        }}
+      >
+        <strong style={{ color: "#22d3ee" }}>What this tab is for:</strong>{" "}
+        before the emitted scaffold can run in live mode, you need to
+        supply the connectors below. Until then we ship fixtures so the
+        scaffold runs end-to-end on mock data — you can preview,
+        judge, and iterate without a single live integration.
+      </div>
+
+      {/* Connectors / APIs */}
+      <section>
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.5)",
+            marginBottom: 10,
+          }}
+        >
+          Tool / API connectors — live mode
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gap: 10,
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          }}
+        >
+          {connectors.map((c) => (
+            <div
+              key={c.name}
+              style={{
+                padding: 12,
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 10,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "rgba(255,255,255,0.9)",
+                  marginBottom: 4,
+                }}
+              >
+                {c.name}
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: c.requirement === "required" ? "#ef4444" : "#22c55e",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  marginBottom: 6,
+                }}
+              >
+                {c.requirement}
+              </div>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                  color: "rgba(255,255,255,0.65)",
+                }}
+              >
+                {c.why}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Fixtures we ship */}
+      <section>
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.5)",
+            marginBottom: 10,
+          }}
+        >
+          Synthetic fixtures we ship · mock mode works out of the box
+        </div>
+        <ul
+          style={{
+            margin: 0,
+            paddingLeft: 20,
+            fontSize: 13,
+            lineHeight: 1.6,
+            color: "rgba(255,255,255,0.8)",
+          }}
+        >
+          {fixtures.map((f, i) => (
+            <li key={i} style={{ marginBottom: 4 }}>
+              <code style={{ fontSize: 12 }}>{f.path}</code>
+              <span style={{ color: "rgba(255,255,255,0.55)" }}> — {f.note}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {worldData.length > 0 ? (
+        <section>
+          <div
+            style={{
+              fontSize: 10,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.5)",
+              marginBottom: 10,
+            }}
+          >
+            World model data sources · full model only
+          </div>
+          <ul
+            style={{
+              margin: 0,
+              paddingLeft: 20,
+              fontSize: 13,
+              lineHeight: 1.6,
+              color: "rgba(255,255,255,0.8)",
+            }}
+          >
+            {worldData.map((d, i) => (
+              <li key={i} style={{ marginBottom: 4 }}>
+                <strong style={{ color: "rgba(255,255,255,0.9)" }}>
+                  {d.name}
+                </strong>
+                <span style={{ color: "rgba(255,255,255,0.55)" }}>
+                  {" — "}
+                  {d.why}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
+function connectorsForRuntime(
+  lane: string,
+): Array<{ name: string; requirement: "required" | "optional"; why: string }> {
+  switch (lane) {
+    case "orchestrator_worker":
+    case "openai_agents_sdk":
+    case "langgraph_python":
+      return [
+        { name: "LLM API key (Gemini / OpenAI / Anthropic)", requirement: "required", why: "Plan step + per-worker dispatch both call a model." },
+        { name: "Per-tool HTTP endpoint or MCP server", requirement: "required", why: "Each declared tool in the scaffold needs a live handler in live mode." },
+        { name: "Observability sink (e.g. OpenTelemetry, console)", requirement: "optional", why: "Plan/dispatch/compact emits trace events you'll want to keep." },
+        { name: "Scratchpad persistence (Convex / SQLite)", requirement: "optional", why: "Enables resume + cross-run memory; scaffold runs without it." },
+      ];
+    case "tool_first_chain":
+      return [
+        { name: "LLM API key with function-calling support", requirement: "required", why: "The whole lane is a bounded tool-loop." },
+        { name: "Per-tool HTTP endpoint or MCP server", requirement: "required", why: "Each tool needs a live handler." },
+        { name: "Rate-limiter / circuit breaker (optional)", requirement: "optional", why: "Keeps runaway tool loops bounded in production." },
+      ];
+    case "simple_chain":
+    default:
+      return [
+        { name: "LLM API key (any provider)", requirement: "required", why: "Single-shot generation." },
+        { name: "Output-schema validator (Pydantic / Zod)", requirement: "optional", why: "Catches structural contract violations before they reach downstream." },
+      ];
+  }
+}
+
+function fixturesForRuntime(
+  lane: string,
+): Array<{ path: string; note: string }> {
+  const common = [
+    { path: "fixtures/tools.json", note: "Mock responses for every declared tool — mock mode returns these immediately." },
+    { path: "fixtures/prompts.json", note: "Canned user prompts used by the eval suite." },
+  ];
+  if (
+    lane === "orchestrator_worker" ||
+    lane === "openai_agents_sdk" ||
+    lane === "langgraph_python"
+  ) {
+    return [
+      ...common,
+      { path: "fixtures/plan_example.json", note: "Reference PLAN output for the distilled workflow." },
+      { path: "fixtures/scratchpad_example.md", note: "Reference post-dispatch scratchpad for snapshot tests." },
+    ];
+  }
+  return common;
+}
+
+const WORLD_MODEL_DATA: Array<{ name: string; why: string }> = [
+  { name: "Transactional ground truth (signal-fidelity ceiling)", why: "Orders, invoices, payroll — highest-trust feed per the Block framing. Clean inputs don't imply clean judgment; we still judge." },
+  { name: "Outcome encoder stream", why: "What was decided → what happened after. This is the loop that earns structure over time." },
+  { name: "Evidence references per claim", why: "Every LLM-labeled claim carries a source pointer. Judge gates on presence." },
+  { name: "Policy ruleset (must-have-source-ref, amount bounds)", why: "Deterministic checks so the model never quietly makes a judgment call." },
+];
 
 function EmptyState({ title, body }: { title: string; body: React.ReactNode }) {
   return (

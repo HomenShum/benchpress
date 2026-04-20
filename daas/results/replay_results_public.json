@@ -1,6 +1,51 @@
 {
   "flash_model": "gemini-3.1-flash-lite-preview",
   "judge_model": "gemini-3.1-pro-preview",
+  "rubric_schema": {
+    "kind": "boolean_structured_output_reasoning",
+    "checks": [
+      "covers_main_points",
+      "reproduces_specific_artifacts",
+      "addresses_user_prompt",
+      "no_hallucination",
+      "structural_coherence",
+      "baseline_is_substantive"
+    ],
+    "verdict_derivation": "deterministic rollup: not baseline_is_substantive -> insufficient_data; not addresses_user_prompt or not no_hallucination -> regression; count failing fidelity bools (covers_main_points / reproduces_specific_artifacts / structural_coherence): 0 -> transfers, 1 -> lossy, >=2 -> regression."
+  },
+  "per_check_pass_rates": {
+    "covers_main_points": {
+      "passed": 0,
+      "failed": 4,
+      "pass_rate_pct": 0.0
+    },
+    "reproduces_specific_artifacts": {
+      "passed": 0,
+      "failed": 4,
+      "pass_rate_pct": 0.0
+    },
+    "addresses_user_prompt": {
+      "passed": 3,
+      "failed": 1,
+      "pass_rate_pct": 75.0
+    },
+    "no_hallucination": {
+      "passed": 1,
+      "failed": 3,
+      "pass_rate_pct": 25.0
+    },
+    "structural_coherence": {
+      "passed": 3,
+      "failed": 1,
+      "pass_rate_pct": 75.0
+    },
+    "baseline_is_substantive": {
+      "passed": 4,
+      "failed": 0,
+      "pass_rate_pct": 100.0
+    }
+  },
+  "sessions_with_parsed_rubric": 4,
   "clusters": [
     {
       "cluster_id": "cluster_0",
@@ -13,31 +58,55 @@
       "transfer_rate": 0.0,
       "transfer_rate_ci95_lo": 0.0,
       "transfer_rate_ci95_hi": 0.658,
-      "total_usd": 0.014491,
+      "total_usd": 0.019071,
       "per_session_verdicts": [
         {
           "session_id_prefix": "6df2731c",
           "verdict": "insufficient_data",
-          "reason_redacted": "The original answer discusses hallucination mitigation and grounding, which is completely unrelated to the user prompt about search functionality, entity resolution, and message queues, making a meani",
-          "flash_tokens": 3051,
-          "judge_tokens": 2816,
-          "usd": 0.004753
+          "reason_redacted": "unparseable judge (first 200 chars): {\n  \"covers_main_points\": {\n    \"bool\": false,\n    \"reason\": \"The replay completely misses the hallucination mitigation research and pipeline changes discussed in ",
+          "checks_summary": {
+            "covers_main_points": null,
+            "reproduces_specific_artifacts": null,
+            "addresses_user_prompt": null,
+            "no_hallucination": null,
+            "structural_coherence": null,
+            "baseline_is_substantive": null
+          },
+          "flash_tokens": 2982,
+          "judge_tokens": 3183,
+          "usd": 0.005263
         },
         {
           "session_id_prefix": "30393b87",
           "verdict": "regression",
-          "reason_redacted": "The replay answer completely hallucinates a different set of files and phases, missing the specific 16-field packet completeness checklist and the exact files modified in the original answer.",
-          "flash_tokens": 2867,
-          "judge_tokens": 2449,
-          "usd": 0.004713
+          "reason_redacted": "The replay fabricates numerous details not present in the prompt or original, such as 'DeepTrace', 'Agent Trust', and specific completion percentages.",
+          "checks_summary": {
+            "covers_main_points": false,
+            "reproduces_specific_artifacts": false,
+            "addresses_user_prompt": true,
+            "no_hallucination": false,
+            "structural_coherence": true,
+            "baseline_is_substantive": true
+          },
+          "flash_tokens": 2797,
+          "judge_tokens": 2889,
+          "usd": 0.006355
         },
         {
           "session_id_prefix": "3ba17d8b",
           "verdict": "regression",
-          "reason_redacted": "The replay answer completely misses the specific UI/UX diagnosis and recommendations for the local dashboard that were provided in the original answer, focusing instead on the product architecture of ",
-          "flash_tokens": 2928,
-          "judge_tokens": 2843,
-          "usd": 0.005025
+          "reason_redacted": "The replay fabricates specific phases, function names like `cal_weekly_reset`, and arbitrary statistics like 88% UI dedication.",
+          "checks_summary": {
+            "covers_main_points": false,
+            "reproduces_specific_artifacts": false,
+            "addresses_user_prompt": true,
+            "no_hallucination": false,
+            "structural_coherence": false,
+            "baseline_is_substantive": true
+          },
+          "flash_tokens": 2982,
+          "judge_tokens": 3424,
+          "usd": 0.007453
         }
       ]
     },
@@ -47,28 +116,44 @@
       "sessions_replayed": 2,
       "transfers": 0,
       "lossy": 0,
-      "regression": 1,
-      "insufficient_data": 1,
+      "regression": 2,
+      "insufficient_data": 0,
       "transfer_rate": 0.0,
       "transfer_rate_ci95_lo": 0.0,
-      "transfer_rate_ci95_hi": 0.793,
-      "total_usd": 0.010318,
+      "transfer_rate_ci95_hi": 0.658,
+      "total_usd": 0.014464,
       "per_session_verdicts": [
         {
           "session_id_prefix": "75b80dc2",
-          "verdict": "insufficient_data",
-          "reason_redacted": "The original answer responds to missing conversational context about mobile UX docs and a dogfood verdict, making it impossible to meaningfully compare with the replay answer that addresses the actual",
-          "flash_tokens": 3039,
-          "judge_tokens": 2602,
-          "usd": 0.004386
+          "verdict": "regression",
+          "reason_redacted": "The replay completely misses the dogfood verdict and mobile UX gap map sections present in the baseline.; The replay fails to include the specific file names, component names, and tables found in the ",
+          "checks_summary": {
+            "covers_main_points": false,
+            "reproduces_specific_artifacts": false,
+            "addresses_user_prompt": true,
+            "no_hallucination": true,
+            "structural_coherence": true,
+            "baseline_is_substantive": true
+          },
+          "flash_tokens": 3073,
+          "judge_tokens": 3225,
+          "usd": 0.007086
         },
         {
           "session_id_prefix": "14848f3a",
           "verdict": "regression",
-          "reason_redacted": "The replay answer hallucinates a completely different set of tasks (Shared Context Protocol) and fails to address any of the 9 specific UI, architectural, and functional fixes detailed in the original",
-          "flash_tokens": 3357,
-          "judge_tokens": 3031,
-          "usd": 0.005932
+          "reason_redacted": "The replay hallucinates a response about phases and protocols instead of meaningfully addressing the cut-off log provided in the prompt.",
+          "checks_summary": {
+            "covers_main_points": false,
+            "reproduces_specific_artifacts": false,
+            "addresses_user_prompt": false,
+            "no_hallucination": false,
+            "structural_coherence": true,
+            "baseline_is_substantive": true
+          },
+          "flash_tokens": 3280,
+          "judge_tokens": 3436,
+          "usd": 0.007378
         }
       ]
     }
