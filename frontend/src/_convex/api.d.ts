@@ -24,6 +24,7 @@ import type * as domains_daas_mutations from "../domains/daas/mutations.js";
 import type * as domains_daas_ownership from "../domains/daas/ownership.js";
 import type * as domains_daas_queries from "../domains/daas/queries.js";
 import type * as domains_daas_radar from "../domains/daas/radar.js";
+import type * as domains_daas_radarChangelogIngest from "../domains/daas/radarChangelogIngest.js";
 import type * as domains_daas_radarHnIngest from "../domains/daas/radarHnIngest.js";
 import type * as domains_daas_radarIngest from "../domains/daas/radarIngest.js";
 import type * as domains_daas_rubrics from "../domains/daas/rubrics.js";
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   "domains/daas/ownership": typeof domains_daas_ownership;
   "domains/daas/queries": typeof domains_daas_queries;
   "domains/daas/radar": typeof domains_daas_radar;
+  "domains/daas/radarChangelogIngest": typeof domains_daas_radarChangelogIngest;
   "domains/daas/radarHnIngest": typeof domains_daas_radarHnIngest;
   "domains/daas/radarIngest": typeof domains_daas_radarIngest;
   "domains/daas/rubrics": typeof domains_daas_rubrics;

@@ -197,6 +197,65 @@ export const getIngestHealth = query({
   },
 });
 
+/**
+ * Telemetry rollup over daasAuditLog — powers /_internal/telemetry.
+ * Returns per-op aggregates in a time window.
+ */
+export const getTelemetryRollup = query({
+  args: { windowHours: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const windowMs = (args.windowHours ?? 24) * 60 * 60 * 1000;
+    const cutoff = Date.now() - windowMs;
+    const rows = await ctx.db
+      .query("daasAuditLog")
+      .withIndex("by_createdAt")
+      .order("desc")
+      .take(1000);
+    const inWindow = rows.filter((r) => r.createdAt >= cutoff);
+
+    const byOp: Record<
+      string,
+      {
+        op: string;
+        total: number;
+        ok: number;
+        error: number;
+        denied: number;
+        totalDurationMs: number;
+        avgDurationMs: number;
+      }
+    > = {};
+    for (const r of inWindow) {
+      const entry = byOp[r.op] ?? {
+        op: r.op,
+        total: 0,
+        ok: 0,
+        error: 0,
+        denied: 0,
+        totalDurationMs: 0,
+        avgDurationMs: 0,
+      };
+      entry.total += 1;
+      if (r.status === "ok") entry.ok += 1;
+      else if (r.status === "error") entry.error += 1;
+      else if (r.status === "denied") entry.denied += 1;
+      entry.totalDurationMs += r.durationMs ?? 0;
+      byOp[r.op] = entry;
+    }
+    for (const entry of Object.values(byOp)) {
+      entry.avgDurationMs =
+        entry.total > 0 ? Math.round(entry.totalDurationMs / entry.total) : 0;
+    }
+    const rolled = Object.values(byOp).sort((a, b) => b.total - a.total);
+    return {
+      windowHours: args.windowHours ?? 24,
+      totalOps: inWindow.length,
+      totalErrors: inWindow.filter((r) => r.status === "error").length,
+      byOp: rolled,
+    };
+  },
+});
+
 /** Counts by category — powers the Radar tab pills */
 export const getCategoryCounts = query({
   args: {},

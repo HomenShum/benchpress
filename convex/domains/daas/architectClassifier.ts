@@ -131,10 +131,13 @@ export const classify = action({
       return { ok: false, reason: "cost_capped" };
     }
 
-    // Rate-limit check — bucket by the first 6 chars of sessionSlug so
-    // one anonymous client can't spam classifier calls. This is a best-
-    // effort protection until we ship real auth.
-    const bucketKey = `architect:${args.sessionSlug.slice(0, 6) || "anon"}`;
+    // Rate-limit check — bucket by the full sessionSlug. Each session
+    // gets its own bucket; an abusive client would need to create
+    // many sessions to spam the classifier, which costs them slug
+    // creation overhead + is visible in daasAuditLog. This lets the
+    // eval harness (30 sequential classifies across 30 distinct slugs)
+    // run without collision on shared prefix.
+    const bucketKey = `architect:${args.sessionSlug || "anon"}`;
     const bucket = await ctx.runMutation(
       api.domains.daas.architectRate.checkClassifyBucket,
       { bucketKey },

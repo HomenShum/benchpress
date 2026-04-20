@@ -16,6 +16,7 @@ import { Architect } from "./pages/Architect";
 import { Builder } from "./pages/Builder";
 import { Radar } from "./pages/Radar";
 import { Fidelity } from "./pages/Fidelity";
+import { Telemetry } from "./pages/Telemetry";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import "./index.css";
 
@@ -70,6 +71,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             element={
               <ErrorBoundary label="fidelity">
                 <Fidelity />
+              </ErrorBoundary>
+            }
+          />
+          <Route
+            path="/_internal/telemetry"
+            element={
+              <ErrorBoundary label="telemetry">
+                <Telemetry />
               </ErrorBoundary>
             }
           />
