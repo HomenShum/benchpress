@@ -16,6 +16,8 @@ import {
   daasExternalizations,
   daasFidelityTrials,
   daasFidelityVerdicts,
+  architectSessions,
+  radarItems,
 } from "./domains/daas/schema";
 
 export default defineSchema({
@@ -30,4 +32,6 @@ export default defineSchema({
   daasExternalizations,
   daasFidelityTrials,
   daasFidelityVerdicts,
+  architectSessions,
+  radarItems,
 });

@@ -355,6 +355,118 @@ export const DAAS_TRANSFER_VERDICTS = [
   "insufficient_data",
 ] as const;
 
+/**
+ * architectSessions — chat-first intake + architecture triage.
+ *
+ * Every landing-page interaction records a session: the user's prompt,
+ * the classifier's streaming checklist, and the final 3-card recommendation
+ * (runtime / world-model / eval). Builder page loads by sessionId.
+ *
+ * The classifier output is a bounded-shape JSON so downstream routing
+ * (to Builder scaffolds, to Radar priors) stays type-safe.
+ */
+export const ARCHITECT_RUNTIME_LANES = [
+  "simple_chain",        // bounded, deterministic, tool-routing / formatting
+  "tool_first_chain",    // chain with structured tool calls and response schema
+  "orchestrator_worker", // fan-out workers + handoffs + compaction
+  "keep_big_model",      // route to frontier; don't try to distill
+] as const;
+
+export const ARCHITECT_WORLD_MODEL_LANES = [
+  "lite",   // entities + schema only
+  "full",   // entities + state + events + policies + actions + outcomes + evidence
+] as const;
+
+export const ARCHITECT_INTENT_LANES = [
+  "compile_down",   // frontier -> cheap
+  "compile_up",     // legacy chain -> scaffold
+  "translate",      // one SDK/framework -> another
+  "greenfield",     // no prior solution
+  "unknown",        // classifier couldn't confidently pick a lane
+] as const;
+
+export const architectSessions = defineTable({
+  /** Short human-shareable id: 8-char alphanum (URL-friendly). */
+  sessionSlug: v.string(),
+  /** The user's initial prompt */
+  prompt: v.string(),
+  /** Append-only list of {ts, role, content} — user + assistant turns */
+  transcriptJson: v.string(),
+  /** Bounded classifier output; see frontend Architect for shape */
+  classificationJson: v.optional(v.string()),
+  /** Streaming checklist state for UI replay */
+  checklistJson: v.optional(v.string()),
+  /** One of ARCHITECT_RUNTIME_LANES (final recommendation) */
+  runtimeLane: v.optional(v.string()),
+  /** One of ARCHITECT_WORLD_MODEL_LANES */
+  worldModelLane: v.optional(v.string()),
+  /** One of ARCHITECT_INTENT_LANES */
+  intentLane: v.optional(v.string()),
+  /** Free-form why + next-steps — capped at 4KB by mutation */
+  rationale: v.optional(v.string()),
+  /** Status: "intake" | "classifying" | "ready" | "accepted" | "dismissed" */
+  status: v.string(),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index("by_sessionSlug", ["sessionSlug"])
+  .index("by_status_createdAt", ["status", "createdAt"])
+  .index("by_createdAt", ["createdAt"]);
+
+/**
+ * radarItems — normalized ecosystem intelligence feed.
+ *
+ * Tier 1 (official changelogs, GitHub releases, benchmark leaderboards) is
+ * the authoritative source. Tier 2 (Vellum, vendor blogs) is interpretation.
+ * Tier 3 (HN/X/discourse) is weak signal. Each item carries:
+ *   - what changed
+ *   - which stacks it affects
+ *   - which internal prior to update (runtime / eval / world_model)
+ *   - suggested action for attrition users
+ *
+ * Explicitly NOT an "AI news feed". Every row has an `affectsLanes` array
+ * so the recommender can look up relevant updates when triaging a user
+ * intake.
+ */
+export const RADAR_CATEGORIES = [
+  "release",       // new version of a framework / model / SDK
+  "benchmark",     // new benchmark, leaderboard shift, saturation signal
+  "pattern",       // emerging architecture pattern (e.g. new orchestrator shape)
+  "deprecation",   // removed / EOL feature
+  "watchlist",     // tracked project heartbeat (seen activity but no notable change)
+] as const;
+
+export const RADAR_SOURCE_TIERS = ["tier1_official", "tier2_interpreter", "tier3_weak"] as const;
+
+export const radarItems = defineTable({
+  /** Stable id: "<category>:<slug>:<iso_date>" */
+  itemId: v.string(),
+  category: v.string(),
+  sourceTier: v.string(),
+  /** Which framework / project this item is about (e.g. "claude_code", "openai_agents_sdk") */
+  stack: v.string(),
+  title: v.string(),
+  summary: v.string(), // 280 char cap enforced by mutation
+  url: v.string(),
+  /** ISO timestamp of the upstream change */
+  changedAt: v.number(),
+  /** Which architect lanes this affects — any of ARCHITECT_RUNTIME_LANES */
+  affectsLanesJson: v.string(),
+  /** Which priors to adjust: "runtime" | "eval" | "world_model" | "none" */
+  updatesPrior: v.string(),
+  /** Suggested action for attrition users, 1-2 sentences */
+  suggestedAction: v.optional(v.string()),
+  /** Dismissed by operator (hide from default Radar view) */
+  dismissed: v.boolean(),
+  createdAt: v.number(),
+})
+  .index("by_itemId", ["itemId"])
+  .index("by_category_changedAt", ["category", "changedAt"])
+  .index("by_stack_changedAt", ["stack", "changedAt"])
+  .index("by_sourceTier_changedAt", ["sourceTier", "changedAt"])
+  .index("by_dismissed_changedAt", ["dismissed", "changedAt"])
+  .index("by_changedAt", ["changedAt"]);
+
 export const daasFidelityVerdicts = defineTable({
   externalizationId: v.string(),
   benchmarkId: v.string(),
