@@ -34,6 +34,9 @@ from typing import Any
 
 from daas.benchmarks.mmlu_pro import runner as mmlu_pro_runner
 from daas.benchmarks.judgebench import runner as judgebench_runner
+from daas.benchmarks.if_rewardbench import runner as if_rewardbench_runner
+from daas.benchmarks.arena_hard_auto import runner as arena_hard_runner
+from daas.benchmarks.rewardbench_2 import runner as rewardbench_2_runner
 from daas.fidelity import Externalization
 from daas.fidelity.trial import (
     prompt_scaffold_for_mmlu_pro,
@@ -44,24 +47,37 @@ from daas.fidelity.trial import (
 CONVEX_PROD_URL = "https://joyous-walrus-428.convex.cloud"
 
 
+_ADAPTERS = {
+    "mmlu_pro": mmlu_pro_runner,
+    "judgebench": judgebench_runner,
+    "if_rewardbench": if_rewardbench_runner,
+    "arena_hard_auto": arena_hard_runner,
+    "rewardbench_2": rewardbench_2_runner,
+}
+
+
 def _adapter_for(benchmark: str):
-    if benchmark == "mmlu_pro":
-        return mmlu_pro_runner
-    if benchmark == "judgebench":
-        return judgebench_runner
-    raise SystemExit(
-        f"unknown benchmark {benchmark!r}. Known: mmlu_pro, judgebench. "
-        "Add the adapter + scaffold function to daas/fidelity/cli.py."
-    )
+    adapter = _ADAPTERS.get(benchmark)
+    if adapter is None:
+        raise SystemExit(
+            f"unknown benchmark {benchmark!r}. Known: {sorted(_ADAPTERS)}. "
+            "Add the adapter + scaffold function to daas/fidelity/cli.py."
+        )
+    return adapter
 
 
 def _scaffold_for(benchmark: str, form: str):
     if benchmark == "mmlu_pro" and form == "prompt":
         return prompt_scaffold_for_mmlu_pro
-    if benchmark == "judgebench" and form == "prompt":
-        # JudgeBench tasks already contain the full question in task["question"]
-        # and are consumed by judgebench.live_replay — the scaffold here is a
-        # no-op passthrough unless/until we distill a judge-specific preamble.
+    # All pairwise-preference benchmarks use the passthrough scaffold by
+    # default. A benchmark-specific scaffold can override via future
+    # adapter-scoped factories.
+    if form == "prompt" and benchmark in (
+        "judgebench",
+        "if_rewardbench",
+        "arena_hard_auto",
+        "rewardbench_2",
+    ):
         return prompt_scaffold_passthrough
     raise SystemExit(
         f"no scaffold known for (benchmark={benchmark}, form={form}). "
@@ -71,7 +87,11 @@ def _scaffold_for(benchmark: str, form: str):
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--benchmark", required=True, choices=["mmlu_pro", "judgebench"])
+    p.add_argument(
+        "--benchmark",
+        required=True,
+        choices=sorted(_ADAPTERS),
+    )
     p.add_argument("--externalization-id", required=True)
     p.add_argument("--form", required=True, choices=["prompt", "tool_schema", "scaffold_graph"])
     p.add_argument("--artifact", required=True, type=Path, help="Path to JSON artifact")
