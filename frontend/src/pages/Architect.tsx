@@ -15,6 +15,7 @@ import { useMutation, useAction, useQuery } from "convex/react";
 import { api } from "../_convex/api";
 import { Nav } from "../components/Nav";
 import { HeroDemoLoop } from "../components/HeroDemoLoop";
+import { ProofSection } from "../components/ProofSection";
 
 type TranscriptTurn = { ts: number; role: "user" | "assistant"; content: string };
 
@@ -344,10 +345,14 @@ export function Architect() {
               ))}
             </div>
 
+            {/* Measured proof — BFCL v3 n=200 result, rendered first so
+                a visitor sees real numbers before any scripted demo. */}
+            <ProofSection />
+
             {/* Animated hero demo loop — 3 scripted sample triages */}
             <div
               style={{
-                marginTop: 36,
+                marginTop: 24,
                 padding: "16px 0 0",
                 borderTop: "1px solid rgba(255,255,255,0.06)",
               }}

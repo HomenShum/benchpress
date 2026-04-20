@@ -207,12 +207,11 @@ def live_replay(
     key = api_key or _resolve_api_key()
     prompt = _format_prompt(task)
 
-    # Pro's CoT is ~2-3× longer than Flash Lite's. A 2048-token budget
-    # truncates Pro before the final "The answer is X" line and the
-    # extractor silently misses. Verified by inspecting Pro failures on
-    # engineering tasks: 3/6 failures were budget truncations, not wrong
-    # answers. Budget the model appropriately.
-    max_tokens = 4096 if "pro" in model else 2048
+    # Pro's CoT on hard MMLU-Pro categories (math, physics, law) regularly
+    # exceeds 4096 tokens — scout run showed 40-50% truncation on math/law
+    # at 4096. Bumping to 8192 for Pro (and 4096 for Flash Lite, which
+    # also needs more headroom than 2048 on reasoning-heavy tasks).
+    max_tokens = 8192 if "pro" in model else 4096
     body = {
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {
