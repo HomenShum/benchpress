@@ -26,4 +26,12 @@ crons.interval(
   internal.domains.daas.radarHnIngest.ingestHnInternal,
 );
 
+// HTML changelog scrapers (Anthropic / OpenAI / Google ADK / Vellum RSS)
+// — these pages change less often than GitHub releases; 12h is plenty.
+crons.interval(
+  "radar-ingest-changelogs",
+  { hours: 12 },
+  internal.domains.daas.radarChangelogIngest.ingestChangelogsInternal,
+);
+
 export default crons;
