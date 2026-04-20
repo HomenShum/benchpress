@@ -247,6 +247,96 @@ export function ProofSection() {
         <code style={{ fontSize: 11 }}>3*x → 3x</code>) — adds another 2pp.
       </p>
 
+      {/* Scope ladder — same stack, different BFCL categories */}
+      <div
+        style={{
+          marginTop: 8,
+          marginBottom: 18,
+          padding: "14px 16px",
+          background: "rgba(255,255,255,0.02)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 10,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.7)",
+            marginBottom: 10,
+          }}
+        >
+          Scope ladder · same stack · different BFCL categories
+        </div>
+        <table
+          style={{
+            width: "100%",
+            fontSize: 11.5,
+            fontFamily: "'JetBrains Mono', monospace",
+            color: "rgba(255,255,255,0.8)",
+            borderCollapse: "collapse",
+          }}
+        >
+          <thead>
+            <tr
+              style={{
+                color: "rgba(255,255,255,0.5)",
+                fontSize: 10,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                textAlign: "left",
+              }}
+            >
+              <th style={{ padding: "6px 8px", fontWeight: 500 }}>Category</th>
+              <th style={{ padding: "6px 8px", fontWeight: 500 }}>Flash</th>
+              <th style={{ padding: "6px 8px", fontWeight: 500 }}>Pro</th>
+              <th style={{ padding: "6px 8px", fontWeight: 500 }}>Pro − Flash</th>
+              <th style={{ padding: "6px 8px", fontWeight: 500 }}>Normalizer</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <td style={{ padding: "8px", color: "rgba(255,255,255,0.9)" }}>
+                simple <span style={{ color: "rgba(255,255,255,0.45)" }}>n=200 · single call</span>
+              </td>
+              <td style={{ padding: "8px" }}>93.0%</td>
+              <td style={{ padding: "8px" }}>74.5%</td>
+              <td style={{ padding: "8px", color: "#ef4444", fontWeight: 600 }}>
+                −18.5pp <span style={{ color: "rgba(255,255,255,0.45)", fontWeight: 400 }}>sig</span>
+              </td>
+              <td style={{ padding: "8px", color: "#22c55e", fontWeight: 600 }}>+2.0pp</td>
+            </tr>
+            <tr style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <td style={{ padding: "8px", color: "rgba(255,255,255,0.9)" }}>
+                parallel <span style={{ color: "rgba(255,255,255,0.45)" }}>n=200 · multi-tool, single turn</span>
+              </td>
+              <td style={{ padding: "8px" }}>86.0%</td>
+              <td style={{ padding: "8px" }}>87.5%</td>
+              <td style={{ padding: "8px", color: "rgba(255,255,255,0.7)" }}>
+                +1.5pp <span style={{ color: "rgba(255,255,255,0.45)", fontWeight: 400 }}>noise</span>
+              </td>
+              <td style={{ padding: "8px", color: "rgba(255,255,255,0.7)" }}>+0.5pp</td>
+            </tr>
+          </tbody>
+        </table>
+        <p
+          style={{
+            fontSize: 11,
+            color: "rgba(255,255,255,0.55)",
+            lineHeight: 1.55,
+            margin: "10px 0 0",
+          }}
+        >
+          <strong style={{ color: "rgba(255,255,255,0.8)" }}>Honest read:</strong>{" "}
+          the 18.5pp gap is real on <code>simple</code> (surface-syntax
+          mismatch is where Pro hurts itself). On <code>parallel</code>{" "}
+          (multi-tool, single-turn) the models tie within CI. Not yet
+          measured: <code>multi_turn</code> (stateful) and <code>tau2</code>{" "}
+          (agentic). We don&apos;t generalize beyond what we ran.
+        </p>
+      </div>
+
       <p
         style={{
           fontSize: 12,
