@@ -240,17 +240,20 @@ def _write_bundle(bundle: Any, outdir: Path) -> None:
         target.write_text(f.content, encoding="utf-8")
 
 
+_SCAFFOLD_MODULES = ("runner", "tools", "schemas", "prompts", "state", "handoffs", "orchestrator", "graph", "agent", "workers", "eval", "observability", "mcp_server", "state_store", "server")
+
+
 def _import_module_from(path: Path, module_name: str) -> Any:
-    # Put the scaffold dir FIRST on sys.path, clear any cached module of
-    # the same name, re-import fresh so we don't read a prior bundle.
+    # Clear ALL scaffold modules before each scenario — emitter
+    # produces modules with identical names across scenarios.
+    for k in list(sys.modules.keys()):
+        base = k.split(".", 1)[0]
+        if base in _SCAFFOLD_MODULES:
+            del sys.modules[k]
     sys.path.insert(0, str(path))
     try:
-        for k in list(sys.modules.keys()):
-            if k == module_name or k.startswith(module_name + "."):
-                del sys.modules[k]
         return importlib.import_module(module_name)
     finally:
-        # don't leave path polluted for next condition
         try:
             sys.path.remove(str(path))
         except ValueError:
@@ -295,7 +298,13 @@ def run_scaffold(
             runner_mod = _import_module_from(tmp, "runner")
             schemas_mod = _import_module_from(tmp, "schemas")
             result = runner_mod.run(schemas_mod.ChainInput(query=str(question)))
-            tool_calls = list(getattr(result, "tool_calls_log", []) or [])
+            # ChainOutput exposes the tool-call list as `tool_calls`
+            # (internal var is `tool_calls_log` — don't confuse).
+            tool_calls = list(
+                getattr(result, "tool_calls", None)
+                or getattr(result, "tool_calls_log", None)
+                or []
+            )
             in_tok = int(getattr(result, "input_tokens", 0) or 0)
             out_tok = int(getattr(result, "output_tokens", 0) or 0)
         elif lane == "orchestrator_worker":

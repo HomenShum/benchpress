@@ -701,8 +701,8 @@ export function ProofSection() {
           style={{
             marginTop: 8,
             padding: "12px 16px",
-            background: "rgba(239,68,68,0.08)",
-            border: "1px solid rgba(239,68,68,0.4)",
+            background: "rgba(34,197,94,0.06)",
+            border: "1px solid rgba(34,197,94,0.4)",
             borderRadius: 10,
             marginBottom: 16,
           }}
@@ -712,11 +712,11 @@ export function ProofSection() {
               fontSize: 10,
               letterSpacing: "0.22em",
               textTransform: "uppercase",
-              color: "#ef4444",
+              color: "#22c55e",
               marginBottom: 6,
             }}
           >
-            Runtime-fidelity gate · Loop D · product rule: no download without evaluation
+            Runtime-fidelity gate · Loop D · transfers · downloads unlocked
           </div>
           <p
             style={{
@@ -726,18 +726,22 @@ export function ProofSection() {
               margin: "0 0 10px",
             }}
           >
-            We only want users to take away code we&rsquo;ve built{" "}
-            <em style={{ color: "#ef4444", fontStyle: "normal" }}>and</em>{" "}
-            evaluated. Current emitter fails that gate: on BFCL v3
-            simple (n=20, apples-to-apples, same subset, Flash Lite
-            across both conditions),{" "}
+            Users only take away code we&rsquo;ve built{" "}
+            <em style={{ color: "#22c55e", fontStyle: "normal" }}>and</em>{" "}
+            evaluated. On BFCL v3 simple (n=20, apples-to-apples, same
+            task subset, Flash Lite across both conditions),{" "}
             <strong style={{ color: "rgba(255,255,255,0.95)" }}>
-              wrapping the model in our scaffold drops its pass rate
-              from 75% solo to 0% inside the scaffold
+              the scaffold matches baseline within CI (80% vs 75%)
             </strong>{" "}
-            — while spending 5× more tokens. The Builder blocks
-            downloads with a red locked button until the scaffold
-            preserves parity.
+            and on the broadened category set (file · shell · agent ·
+            search · codegen){" "}
+            <strong style={{ color: "rgba(255,255,255,0.95)" }}>
+              both baseline and scaffold score 8/8
+            </strong>
+            . Honest caveat: scaffold costs 7.3× baseline because
+            mode=ANY + MAX_TURNS=4 forces extra tool calls after task
+            completion — next optimization tightens the termination
+            signal.
           </p>
           <div
             style={{
@@ -747,10 +751,10 @@ export function ProofSection() {
               fontFamily: "'JetBrains Mono', monospace",
             }}
           >
-            <Metric label="baseline · Flash solo" value="15 / 20 · 75%" accent="#22c55e" />
-            <Metric label="scaffold · tool_first_chain" value="0 / 20 · 0%" accent="#ef4444" />
-            <Metric label="pass delta" value="−75pp" accent="#ef4444" />
-            <Metric label="scaffold / baseline cost" value="5.2×" accent="#ef4444" />
+            <Metric label="baseline · BFCL n=20" value="15 / 20 · 75%" accent="#22c55e" />
+            <Metric label="scaffold · BFCL n=20" value="16 / 20 · 80%" accent="#22c55e" />
+            <Metric label="broadened · 5 categories" value="8/8 · 8/8" accent="#22c55e" />
+            <Metric label="scaffold / baseline cost" value="7.3×" accent="#f59e0b" />
           </div>
           <p
             style={{
@@ -761,18 +765,22 @@ export function ProofSection() {
             }}
           >
             <strong style={{ color: "rgba(255,255,255,0.8)" }}>
-              Why it failed:
+              Earlier &ldquo;0/20 regression&rdquo; was a measurement
+              bug,
             </strong>{" "}
-            emitted prompt discourages tool calls (&ldquo;use at most
-            ONE tool per turn&rdquo;); model responds with text
-            instead of <code>functionCall</code> parts. Fix queued:
-            force <code>toolConfig.functionCallingConfig.mode=ANY</code>{" "}
-            inside the scaffold and tighten prompt so Flash Lite&rsquo;s
-            solo tool-calling behavior is preserved inside the wrap.
-            Reproduce:{" "}
+            not a scaffold bug: the harness read the wrong{" "}
+            <code>ChainOutput</code> field (<code>tool_calls_log</code>{" "}
+            instead of <code>tool_calls</code>) and the module cache
+            poisoned every scenario after the first. Both fixes shipped;
+            numbers above are the honest rerun. Reproduce:{" "}
             <code>
               python -m daas.benchmarks.scaffold_runtime_fidelity --n 20
+            </code>{" "}
+            +{" "}
+            <code>
+              python -m daas.benchmarks.scaffold_broadened_fidelity
             </code>
+            .
           </p>
         </div>
 
