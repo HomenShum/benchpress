@@ -52,8 +52,13 @@ GEMINI_ROOT = "https://generativelanguage.googleapis.com/v1beta"
 # Two research tiers — the model alias maps to the underlying base
 # model + default background setting.
 TIER_CONFIG: dict[str, dict[str, Any]] = {
+    # Base model must exist on the public Generative Language API.
+    # gemini-3.1-pro was announced but not yet exposed to us via REST
+    # when the v1 template shipped. Using gemini-2.5-pro keeps deep
+    # research dispatches going. Users with preview access can override
+    # via GEMINI_DEEP_RESEARCH_MODEL env var if they want.
     "deep_research": {
-        "model": "gemini-3.1-pro",
+        "model": os.environ.get("GEMINI_DEEP_RESEARCH_MODEL", "gemini-2.5-pro"),
         "default_background": False,
         "tools_preset": [
             {"googleSearch": {}},
@@ -62,7 +67,7 @@ TIER_CONFIG: dict[str, dict[str, Any]] = {
         ],
     },
     "deep_research_max": {
-        "model": "gemini-3.1-pro",
+        "model": os.environ.get("GEMINI_DEEP_RESEARCH_MAX_MODEL", "gemini-2.5-pro"),
         "default_background": True,
         "tools_preset": [
             {"googleSearch": {}},
@@ -148,12 +153,33 @@ class GeminiDeepResearchAgent:
         }
 
         t_start = time.perf_counter()
+        fallback_used = False
         try:
             initial = _http_post(url, body)
         except urllib.error.HTTPError as e:
-            raise RuntimeError(
-                f"deep_research HTTP {e.code}: {e.read().decode()[:400]}"
-            ) from e
+            # Graceful fallback: if :interactions is not exposed on this
+            # deployment/region (HTTP 404), fall back to :generateContent
+            # with the research-preset tools attached. Users still get a
+            # valid scaffold driven by Gemini with Google Search / URL
+            # Context / Code Execution — just without the multi-step
+            # researchSteps + citations synthesis the Interactions API
+            # adds on top. Honest degradation, not a silent failure.
+            if e.code == 404:
+                fallback_used = True
+                fallback_url = f"{GEMINI_ROOT}/models/{base_model}:generateContent?key={key}"
+                fallback_body = dict(body)
+                fallback_body.pop("background", None)
+                try:
+                    initial = _http_post(fallback_url, fallback_body)
+                except urllib.error.HTTPError as e2:
+                    raise RuntimeError(
+                        f"deep_research fallback HTTP {e2.code}: {e2.read().decode()[:400]}"
+                    ) from e2
+                background = False  # fallback doesn't poll
+            else:
+                raise RuntimeError(
+                    f"deep_research HTTP {e.code}: {e.read().decode()[:400]}"
+                ) from e
 
         response = initial
         # Background mode: poll until completion.

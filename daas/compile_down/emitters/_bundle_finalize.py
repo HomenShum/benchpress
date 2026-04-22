@@ -98,11 +98,21 @@ _LANE_ENV: dict[str, list[tuple[str, str]]] = {
 }
 
 _LANE_ENTRYPOINT: dict[str, str] = {
-    "simple_chain": "main.py",
-    "tool_first_chain": "main.py",
-    "orchestrator_worker": "orchestrator.py",
-    "openai_agents_sdk": "main.py",
-    "langgraph_python": "graph.py",
+    # Every Python lane's canonical runner is emitted as server.py by
+    # `_server_py(runtime_lane)`. Prior mapping pointed at main.py /
+    # orchestrator.py / graph.py (legacy) — run.sh then referenced an
+    # entrypoint that didn't exist in the bundle, breaking ./run.sh
+    # on first execution. All lanes now agree: server.py is the runner.
+    "simple_chain": "server.py",
+    "tool_first_chain": "server.py",
+    "orchestrator_worker": "server.py",
+    "openai_agents_sdk": "server.py",
+    "claude_agent_sdk": "server.py",
+    "langgraph_python": "server.py",
+    "manus": "server.py",
+    "deerflow": "server.py",
+    "hermes": "server.py",
+    "gemini_deep_research": "server.py",
 }
 
 
@@ -994,6 +1004,24 @@ def finalize_bundle(
     # correct_lane_picked judge. Filter now so the bundle is consistent
     # regardless of who wrote each file OR which platform produced it
     # (Windows workspaces emit backslash paths — we normalize).
+    # Python backfills that don't belong in a TS/JS lane. The agent is
+    # instructed (via skill manifest) to write Next.js / Convex TS files;
+    # the Python stubs finalize adds for other lanes would pollute the
+    # bundle and fail the correct_lane_picked judge.
+    _TS_LANE_PY_EXCLUDES: frozenset[str] = frozenset({
+        "server.py",
+        "state_store.py",
+        "mcp_server.py",
+        "tools.py",
+        "observability.py",
+        "eval/__init__.py",
+        "eval/scenarios.py",
+        "eval/rubric.py",
+        "requirements.txt",
+        "requirements-all.txt",
+        "run.sh",
+    })
+
     _lane_excludes_early: dict[str, frozenset[str]] = {
         "simple_chain": frozenset({
             "state_store.py",
@@ -1007,6 +1035,11 @@ def finalize_bundle(
         "tool_first_chain": frozenset({
             "state_store.py",
         }),
+        # TS/JS lanes: block Python backfill. Agent-written .ts / .tsx
+        # / .mjs files pass through unchanged; workflow_spec.json +
+        # .env.example + README.md apply to every lane.
+        "convex_functions": _TS_LANE_PY_EXCLUDES,
+        "vercel_ai_sdk": _TS_LANE_PY_EXCLUDES,
     }
     _excluded_early = _lane_excludes_early.get(runtime_lane, frozenset())
 
@@ -1025,15 +1058,28 @@ def finalize_bundle(
     # Normalize path separators on every file the agent wrote so
     # downstream tooling (ZIP emit, gate checks, judge) sees a consistent
     # forward-slash layout regardless of host OS.
+    #
+    # DROP any agent-emitted runner.py / main.py that would block the
+    # canonical server.py backfill. Previously we tried to rename them
+    # to server.py, but that promoted the agent's raw (often mock-mode-
+    # less) content into the runner slot and prevented finalize from
+    # writing the canonical server.py with CONNECTOR_MODE handling.
+    # v3 baseline regressed 23 rows on that change; dropping is safer.
     normalized_input: list[ArtifactFile] = []
+    drop_runners = ("runner.py", "main.py")
     for f in bundle.files:
         if _path_excluded(f.path):
             continue
+        n_path = _norm(f.path)
+        # If the agent wrote a top-level runner.py/main.py but ALSO a
+        # top-level server.py, drop the runner.py to avoid duplication.
+        # If only runner.py exists, drop it too so finalize writes the
+        # canonical server.py (which has the full mock/live handling).
+        if n_path in drop_runners:
+            continue
         if "\\" in f.path:
-            # Recreate with normalized path (ArtifactFile is a dataclass;
-            # we produce a fresh instance rather than mutating).
             normalized_input.append(ArtifactFile(
-                path=_norm(f.path),
+                path=n_path,
                 content=f.content,
                 language=getattr(f, "language", "text"),
             ))
@@ -1067,6 +1113,21 @@ def finalize_bundle(
         ("eval/rubric.py", _eval_rubric_py(), "python"),
         ("observability.py", _observability_py(), "python"),
     ]
+
+    # Files we ALWAYS overwrite with canonical content — these have strict
+    # contracts (valid JSON, correct entry-point reference) that agents
+    # sometimes get wrong in ways that fail gates. Finalize owns these.
+    # AE04/AE08 (v4): agent wrote empty workflow_spec.json → roundtrip
+    # gate fails. AE27 (v4): agent wrote run.sh with `python runner.py`
+    # after we dropped runner.py → judge flags non-canonical entry.
+    FORCED_CANONICAL: frozenset[str] = frozenset({
+        "workflow_spec.json",
+        "run.sh",
+    })
+    # Pre-filter: remove any agent-written versions of forced-canonical
+    # files so the backfill loop writes the canonical version fresh.
+    appended = [f for f in appended if f.path not in FORCED_CANONICAL]
+    existing_paths = {f.path for f in appended}
     # MCP server is backfilled for lanes that actually dispatch tools.
     # Tool-less lanes (simple_chain) don't need an MCP endpoint; the
     # `correct_lane_picked` LLM judge flags them for over-emission.
