@@ -1,0 +1,175 @@
+{
+  "harness_version": "attrition.v1",
+  "schema": "daas/benchmarks/attrition_eval_template_v1.csv",
+  "dry": true,
+  "elapsed_s": 0.0,
+  "rows_total": 3,
+  "pass": 0,
+  "fail": 0,
+  "skip": 3,
+  "total_cost_usd": 0.0,
+  "per_row": [
+    {
+      "case_id": "AE01",
+      "overall_pass": null,
+      "overall_rationale": "dry run: harness plumbing only",
+      "run_elapsed_s": 0.0,
+      "run_cost_usd": 0.0,
+      "dispatch_error": null,
+      "gates": {
+        "scaffold_compiles": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "scaffold_runs_mock": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "nine_layers_present": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "correct_lane_picked": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "connector_resolver_working": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "mcp_server_importable": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "workflow_spec_roundtrip": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "baseline_parity": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "cost_under_budget": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "latency_under_budget": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "runtime_used_correctly": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        }
+      }
+    },
+    {
+      "case_id": "AE02",
+      "overall_pass": null,
+      "overall_rationale": "dry run: harness plumbing only",
+      "run_elapsed_s": 0.0,
+      "run_cost_usd": 0.0,
+      "dispatch_error": null,
+      "gates": {
+        "scaffold_compiles": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "scaffold_runs_mock": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "nine_layers_present": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "correct_lane_picked": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "connector_resolver_working": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "mcp_server_importable": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "workflow_spec_roundtrip": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "baseline_parity": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "cost_under_budget": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "latency_under_budget": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "runtime_used_correctly": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        }
+      }
+    },
+    {
+      "case_id": "AE03",
+      "overall_pass": null,
+      "overall_rationale": "dry run: harness plumbing only",
+      "run_elapsed_s": 0.0,
+      "run_cost_usd": 0.0,
+      "dispatch_error": null,
+      "gates": {
+        "scaffold_compiles": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "scaffold_runs_mock": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "nine_layers_present": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "correct_lane_picked": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "connector_resolver_working": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "mcp_server_importable": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "workflow_spec_roundtrip": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "baseline_parity": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "cost_under_budget": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "latency_under_budget": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        },
+        "runtime_used_correctly": {
+          "passed": null,
+          "rationale": "dry run: not dispatched"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "harness_version": "attrition.v1",
+  "schema": "daas/benchmarks/attrition_eval_template_v1.csv",
+  "dry": false,
+  "elapsed_s": 22.86,
+  "rows_total": 1,
+  "pass": 0,
+  "fail": 1,
+  "skip": 0,
+  "total_cost_usd": 0.0053,
+  "per_row": [
+    {
+      "case_id": "AE01",
+      "overall_pass": false,
+      "overall_rationale": "failed: nine_layers_present, mcp_server_importable, cost_under_budget, latency_under_budget (4/9 eval'd failed)",
+      "run_elapsed_s": 22.75,
+      "run_cost_usd": 0.0053,
+      "dispatch_error": null,
+      "gates": {
+        "scaffold_compiles": {
+          "passed": true,
+          "rationale": "10 .py files ast-parse valid"
+        },
+        "nine_layers_present": {
+          "passed": false,
+          "rationale": "missing: mcp_server.py"
+        },
+        "scaffold_runs_mock": {
+          "passed": true,
+          "rationale": "runner.py parses + references mock/CONNECTOR_MODE"
+        },
+        "connector_resolver_working": {
+          "passed": true,
+          "rationale": "CONNECTOR_MODE referenced in 2 file(s): server.py"
+        },
+        "mcp_server_importable": {
+          "passed": false,
+          "rationale": "mcp_server.py missing from bundle"
+        },
+        "workflow_spec_roundtrip": {
+          "passed": true,
+          "rationale": "valid JSON, 4 top-level keys, roundtrip stable"
+        },
+        "cost_under_budget": {
+          "passed": false,
+          "rationale": "$0.0053 > $0.0020 budget"
+        },
+        "latency_under_budget": {
+          "passed": false,
+          "rationale": "22.75s > 3.0s budget"
+        },
+        "runtime_used_correctly": {
+          "passed": true,
+          "rationale": "runtime_label=gemini_agent matches emit_lane driver"
+        },
+        "correct_lane_picked": {
+          "passed": null,
+          "rationale": "not-yet-wired: requires LLM judge against lane='simple_chain'"
+        },
+        "baseline_parity": {
+          "passed": null,
+          "rationale": "not-yet-wired: requires BFCL/broadened benchmark replay for the emitted scaffold"
+        }
+      }
+    }
+  ]
+}
