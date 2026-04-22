@@ -46,9 +46,12 @@ export function buildProvenance(input: ProvenanceInput): Record<string, unknown>
     driver_model: input.driverModel ?? null,
     // Webhook endpoint scaffold can ping on milestones (opt-in via
     // ATTRITION_TELEMETRY=1 env var in the emitted run.sh).
+    // Convex HTTP actions are served from `.convex.site` — `.cloud` is
+    // the RPC endpoint and returns 404 for HTTP routes. Using the wrong
+    // host here would silently drop every scaffold ping.
     ping_endpoint:
       input.pingEndpoint ??
-      "https://joyous-walrus-428.convex.cloud/http/attritionPing",
+      "https://joyous-walrus-428.convex.site/http/attritionPing",
     // Events the scaffold should ping when they happen. Each is optional
     // and no-ops if the env var is unset. This lets the 60-min
     // NextSteps page tick off checkboxes in real time.

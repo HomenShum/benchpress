@@ -307,7 +307,69 @@ export const runLiveAgent = action({
       input: userPrompt,
     });
 
-    // Emit run_start
+    // Tier-2 dispatch: if EXECUTOR_URL is configured, send the run to
+    // the Python sandbox service which runs the LITERAL emitted
+    // scaffold and emits spans back via /http/attritionTrace. Falls
+    // back to the in-action TS loop below if EXECUTOR_URL is unset or
+    // the executor call fails.
+    const executorUrl = process.env.EXECUTOR_URL;
+    if (executorUrl) {
+      try {
+        const execRes = await fetch(`${executorUrl.replace(/\/+$/, "")}/execute`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            run_id: args.runId,
+            lane,
+            user_prompt: userPrompt,
+            session_slug: args.sessionSlug,
+            byok_anthropic_key: args.byokAnthropicKey,
+          }),
+        });
+        const execBody = await execRes.text();
+        let parsed: Record<string, unknown> = {};
+        try {
+          parsed = JSON.parse(execBody) as Record<string, unknown>;
+        } catch {
+          parsed = { raw: execBody.slice(0, 500) };
+        }
+        const parsedInner = (parsed.parsed ?? {}) as Record<string, unknown>;
+        const finalOutput =
+          typeof parsedInner.final_output === "string"
+            ? (parsedInner.final_output as string)
+            : typeof parsed.raw === "string"
+              ? (parsed.raw as string)
+              : "(no final_output from executor)";
+        const ok = execRes.ok && parsed.ok !== false;
+        await ctx.runMutation(api.domains.daas.agentTrace.finishRun, {
+          runId: args.runId,
+          status: ok ? "complete" : "failed",
+          finalOutput: finalOutput.slice(0, 4000),
+          errorMessage: ok
+            ? undefined
+            : typeof parsed.error === "string"
+              ? (parsed.error as string).slice(0, 500)
+              : `executor HTTP ${execRes.status}`,
+        });
+        return { runId: args.runId, status: ok ? "complete" : "failed" };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        await ctx.runMutation(api.domains.daas.agentTrace.recordSpan, {
+          runId: args.runId,
+          spanId: `exec-err-${Date.now()}`,
+          kind: "meta",
+          name: "executor.unreachable",
+          startedAt: Date.now(),
+          finishedAt: Date.now() + 5,
+          inputJson: JSON.stringify({ executorUrl }),
+          outputJson: JSON.stringify({ error: msg.slice(0, 400) }),
+          errorMessage: `executor unreachable: ${msg.slice(0, 200)}`,
+        });
+        // Fall through to the TS-agent fallback below
+      }
+    }
+
+    // Emit run_start (TS-agent fallback path)
     let spanIdx = 0;
     const t0 = Date.now();
     await ctx.runMutation(api.domains.daas.agentTrace.recordSpan, {
