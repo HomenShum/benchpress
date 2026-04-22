@@ -1,0 +1,67 @@
+{
+  "harness_version": "attrition.v1",
+  "schema": "daas/benchmarks/attrition_eval_template_v1.csv",
+  "dry": false,
+  "elapsed_s": 21.28,
+  "rows_total": 1,
+  "pass": 0,
+  "fail": 1,
+  "skip": 0,
+  "total_cost_usd": 0.0052,
+  "per_row": [
+    {
+      "case_id": "AE01",
+      "overall_pass": false,
+      "overall_rationale": "failed: cost_under_budget, latency_under_budget (2/9 eval'd failed)",
+      "run_elapsed_s": 21.2,
+      "run_cost_usd": 0.0052,
+      "dispatch_error": null,
+      "gates": {
+        "scaffold_compiles": {
+          "passed": true,
+          "rationale": "12 .py files ast-parse valid"
+        },
+        "nine_layers_present": {
+          "passed": true,
+          "rationale": "all 10 required layers present"
+        },
+        "scaffold_runs_mock": {
+          "passed": true,
+          "rationale": "runner.py parses + references mock/CONNECTOR_MODE"
+        },
+        "connector_resolver_working": {
+          "passed": true,
+          "rationale": "CONNECTOR_MODE referenced in 3 file(s): server.py"
+        },
+        "mcp_server_importable": {
+          "passed": true,
+          "rationale": "mcp_server.py ast-parses + references mcp/stdio"
+        },
+        "workflow_spec_roundtrip": {
+          "passed": true,
+          "rationale": "valid JSON, 3 top-level keys, roundtrip stable"
+        },
+        "cost_under_budget": {
+          "passed": false,
+          "rationale": "$0.0052 > $0.0020 budget"
+        },
+        "latency_under_budget": {
+          "passed": false,
+          "rationale": "21.20s > 3.0s budget"
+        },
+        "runtime_used_correctly": {
+          "passed": true,
+          "rationale": "runtime_label=gemini_agent matches emit_lane driver"
+        },
+        "correct_lane_picked": {
+          "passed": null,
+          "rationale": "not-yet-wired: requires LLM judge against lane='simple_chain'"
+        },
+        "baseline_parity": {
+          "passed": null,
+          "rationale": "not-yet-wired: requires BFCL/broadened benchmark replay for the emitted scaffold"
+        }
+      }
+    }
+  ]
+}

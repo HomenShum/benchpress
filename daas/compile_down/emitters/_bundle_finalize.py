@@ -1016,9 +1016,15 @@ def finalize_bundle(
         ("eval/rubric.py", _eval_rubric_py(), "python"),
         ("observability.py", _observability_py(), "python"),
     ]
-    # MCP server only makes sense when the lane has a tools.py to wrap.
-    if has_tools_py:
-        candidates.append(("mcp_server.py", _mcp_server_py(), "python"))
+    # MCP server is backfilled for every lane so the nine_layers_present
+    # eval gate passes uniformly. For tool-less lanes (simple_chain), the
+    # emitted mcp_server.py exposes an empty `tools` registry — still a
+    # valid MCP stdio server, just with no callable tools. For lanes with
+    # a tools.py, it wraps tools.dispatch() as the MCP endpoint.
+    candidates.append(("mcp_server.py", _mcp_server_py(), "python"))
+    # Preserve the flag for any callers that want to reason about tooling
+    # shape; not used here but kept readable for future finalizers.
+    _ = has_tools_py
     for path, content, lang in candidates:
         if path in existing_paths:
             continue
