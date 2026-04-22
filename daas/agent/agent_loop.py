@@ -54,6 +54,7 @@ LANE_REGISTRY: dict[str, str] = {
     "hermes": "hermes.md",
     "convex_functions": "convex_functions.md",
     "vercel_ai_sdk": "vercel_ai_sdk.md",
+    "gemini_deep_research": "gemini_deep_research.md",
 }
 
 SKILLS_ROOT = Path(__file__).resolve().parent.parent / "skills"

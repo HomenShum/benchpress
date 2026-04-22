@@ -8,6 +8,7 @@
 
 export type RuntimeId =
   | "gemini_agent"
+  | "gemini_deep_research"
   | "openai_agents_sdk"
   | "claude_agent_sdk"
   | "langgraph"
@@ -41,6 +42,17 @@ export const RUNTIME_CATALOG: RuntimeOption[] = [
     pricePerMillionOut: 12.0,
     requiresEnv: "GEMINI_API_KEY",
     note: "Native google-genai function-calling; REST-only, zero extra deps.",
+  },
+  {
+    id: "gemini_deep_research",
+    label: "Gemini Deep Research (Google)",
+    provider: "google",
+    defaultModel: "deep_research",
+    models: ["deep_research", "deep_research_max"],
+    pricePerMillionIn: 2.0,
+    pricePerMillionOut: 12.0,
+    requiresEnv: "GEMINI_API_KEY",
+    note: "Autonomous multi-step research: plan → Google Search + URL Context + Code Execution + File Search → cited synthesis. Max tier runs in background.",
   },
   {
     id: "openai_agents_sdk",

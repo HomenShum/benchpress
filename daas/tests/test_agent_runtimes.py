@@ -55,6 +55,7 @@ def test_all_runtimes_register_on_import() -> None:
     # Every adapter module should have self-registered by now.
     for name in (
         "gemini_agent",
+        "gemini_deep_research",
         "openai_agents_sdk",
         "claude_agent_sdk",
         "langgraph",
@@ -301,6 +302,81 @@ def test_workspace_blocks_path_traversal() -> None:
             ws.write("../escape.txt", "nope")
     finally:
         ws.cleanup()
+
+
+# ----- gemini deep research adapter (synchronous mode) -------------------
+def test_gemini_deep_research_sync_mode_normalizes_citations() -> None:
+    from daas.agent.runtimes.gemini_deep_research import GeminiDeepResearchAgent
+
+    # Fake Interactions API response: final text + researchSteps + citations.
+    response = {
+        "candidates": [
+            {
+                "content": {
+                    "role": "model",
+                    "parts": [
+                        {"text": "OpenAI released GPT-5.4 in early 2026."},
+                    ],
+                }
+            }
+        ],
+        "researchSteps": [
+            {"query": "GPT-5.4 release date", "sources": [{"url": "https://openai.com/blog/gpt-5-4"}]},
+            {"query": "GPT-5.4 pricing", "sources": [{"url": "https://openai.com/pricing"}]},
+        ],
+        "citations": [
+            {"url": "https://openai.com/blog/gpt-5-4", "title": "GPT-5.4 launch"},
+            {"url": "https://openai.com/pricing", "title": "OpenAI pricing"},
+        ],
+        "usageMetadata": {"promptTokenCount": 120, "candidatesTokenCount": 340},
+    }
+
+    class _FakeHTTP:
+        def __call__(self, req, timeout=None):
+            class _Resp:
+                def __enter__(self_inner):
+                    return self_inner
+                def __exit__(self_inner, *a):
+                    return False
+                def read(self_inner):
+                    return json.dumps(response).encode("utf-8")
+            return _Resp()
+
+    with patch("urllib.request.urlopen", new=_FakeHTTP()):
+        agent = GeminiDeepResearchAgent()
+        result = agent.run(
+            system="research the latest model releases",
+            user="when was GPT-5.4 released and what does it cost?",
+            tools=[],
+            max_turns=1,
+            model="deep_research",
+            api_key="FAKE_KEY",
+        )
+
+    assert "GPT-5.4" in result.text
+    # 2 research_step + 2 citation calls synthesized
+    step_calls = [c for c in result.tool_calls if c.name == "research_step"]
+    citation_calls = [c for c in result.tool_calls if c.name == "citation"]
+    assert len(step_calls) == 2
+    assert len(citation_calls) == 2
+    assert result.model == "google:deep_research"
+    assert result.runtime_label == "gemini_deep_research"
+    assert result.input_tokens == 120
+    assert result.output_tokens == 340
+
+
+def test_gemini_deep_research_max_rejects_bad_model() -> None:
+    from daas.agent.runtimes.gemini_deep_research import GeminiDeepResearchAgent
+
+    with pytest.raises(ValueError, match="deep_research"):
+        GeminiDeepResearchAgent().run(
+            system="s",
+            user="u",
+            tools=[],
+            max_turns=1,
+            model="some-other-model",
+            api_key="FAKE",
+        )
 
 
 def test_build_tool_set_exposes_eight_tools() -> None:

@@ -16,6 +16,7 @@ Import any adapter module to have it self-register via
 # Self-register all adapters when daas.agent.runtimes is imported.
 from daas.agent.runtimes import (  # noqa: F401
     gemini,
+    gemini_deep_research,
     openai,
     openrouter,
     claude,
